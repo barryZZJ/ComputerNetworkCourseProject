@@ -18,3 +18,29 @@
 /Server/Conn.py : 连接客户端的类，封装socketserver。
 
 /Server/Server.py : 服务端主逻辑代码。处理登录、转发数据等。
+
+## enum枚举类用法
+https://docs.python.org/3/library/enum.html
+```python
+from enum import Enum
+from enum import IntEnum
+from enum import unique, auto
+
+
+@unique # 不允许重复值
+class color(Enum):
+    YELLOW = 1
+    BLUE = 2
+
+class dictionary(Enum):
+    ONE = auto() # 自动生成
+    TWO = auto()
+
+color = Enum('color', 'YELLOW BLUE', module=__name__)
+
+color.YELLOW.value # 1
+color.BLUE.name # 'BLUE'
+
+color(1) # <color.YELLOW: 1>
+color['BLUE'] # <color.BLUE: 2>
+```
