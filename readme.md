@@ -26,6 +26,10 @@ https://cloud.tencent.com/developer/section/1372423
 
 https://docs.python.org/zh-cn/3.6/library/socket.html
 
+### socketserver
+
+https://docs.python.org/zh-cn/3.6/library/socketserver.html#module-socketserver
+
 
 
 ## 界面设计（/文档/GUIx_xxx.png）
