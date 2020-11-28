@@ -3,3 +3,5 @@
 # init函数应该需要传入conn对象，用于传给GUILogic的各种handler
 
 from Client.GUILogic import *
+
+#! 白板板大小同步问题

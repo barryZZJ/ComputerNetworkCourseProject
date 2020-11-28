@@ -33,47 +33,45 @@ class PData:
         :param pType: 绘制类型，0-刷子，1-形状，2-文字，3-橡皮
         :param color: 颜色
         """
-        self.header = {
-            ctrl: ctrl,
-            pType: pType,
-            color: color
-        }
+        # Header
+        self.ctrl = ctrl
+        self.pType = pType
+        self.color = color
+        # Body
+        self.body = {}
 
 class PDataBrush(PData):
     """刷子类型的数据结构"""
-
+    # TODO thickness默认值
     def __init__(self, ctrl, pType, color, pos: Point, thickness=10):
         """
         :param pos: 像素点坐标
         :param thickness: 像素点粗细
         """
         super().__init__(ctrl, pType, color)
-        # TODO
-        self.body = {
+        self.body['pos'] = pos
+        self.body['thickness'] = thickness
 
-        }
-        pass
 
 class PDataShape(PData):
     """形状类型的数据结构"""
-    def __init__(self, ctrl, pType, color, sType: SType, startPoint: Point, endPoint: Point, isHolding: bool, thickness=10):
+    def __init__(self, ctrl, pType, color, sType: SType, st: Point, ed: Point, isHolding: bool, thickness=10):
         """
         :param sType: 形状类型，0-直线，1-矩形，2-圆
-        :param startPoint: 起点
-        :param endPoint: 终点
+        :param st: 起点
+        :param ed: 终点
         :param isHolding: 是否按住鼠标左键
         :param thickness: 粗细
         """
         super().__init__(ctrl, pType, color)
         # TODO
-        self.body = {
-
-        }
+        self.body['sType'] = sType
+        # ...
         pass
 
 class PDataText(PData):
     """文字类型的数据结构"""
-
+    # TODO 字体、字号默认值
     def __init__(self, ctrl, pType, color, content: str, pos: Point, fSize, font):
         """
         :param content: 文本内容
@@ -83,9 +81,7 @@ class PDataText(PData):
         """
         super().__init__(ctrl, pType, color)
         # TODO
-        self.body = {
 
-        }
         pass
 
 class PDataEraser(PData):

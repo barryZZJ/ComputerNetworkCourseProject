@@ -21,6 +21,7 @@ class Conn:
 
     def sendData(self, data) -> bool:
         """发送数据，返回发送是否成功"""
+        # TODO socket.send错误处理
         pass
 
     def recvData(self) -> PData:
