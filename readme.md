@@ -1,3 +1,12 @@
+## 界面设计（/文档/GUIx_xxx.png）
+
+<img src="./文档/GUI_1登录.png" alt="登录" style="zoom: 40%;" />
+<img src="./文档/GUI_2主界面.png" alt="主界面" style="zoom:40%;" />
+<img src="./文档/GUI_3白板.png" alt="白板" style="zoom: 40%;" />
+
+## 业务逻辑
+<img src="./文档/业务逻辑.jpg" alt="业务逻辑" style="zoom:90%;" />
+
 ## 结构介绍
 
 ### 协议设计
@@ -23,24 +32,17 @@
 https://docs.python.org/3/library/enum.html
 ```python
 from enum import Enum
-from enum import IntEnum
-from enum import unique, auto
 
-
-@unique # 不允许重复值
-class color(Enum):
+class Color(Enum):
     YELLOW = 1
     BLUE = 2
 
-class dictionary(Enum):
-    ONE = auto() # 自动生成
-    TWO = auto()
+def f(color: Color):
+    print(color)
+f(Color.BLUE) # 输出 Color.BLUE
 
-color = Enum('color', 'YELLOW BLUE', module=__name__)
-
-color.YELLOW.value # 1
-color.BLUE.name # 'BLUE'
-
-color(1) # <color.YELLOW: 1>
-color['BLUE'] # <color.BLUE: 2>
+Color.BLUE.value # 2
+Color.BLUE.name # 'BLUE'
+Color(2) # <color.BLUE: 2>
+Color['BLUE'] # <color.BLUE: 2>
 ```
