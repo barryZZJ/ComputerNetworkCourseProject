@@ -1,3 +1,33 @@
+## 编程语言：Python 3.6
+
+## 相关库
+
+### tkinter（GUI）
+
+https://docs.python.org/zh-cn/3.9/library/tkinter.html
+
+https://cloud.tencent.com/developer/section/1372347
+
+### PyQt5（另一个GUI）
+
+
+
+### Qpainter（来自PyQt5）
+
+`from PyQt5.QtGui import QPainter`
+
+https://doc.qt.io/qtforpython/PySide2/QtGui/QPainter.html
+
+### turtle 
+
+https://cloud.tencent.com/developer/section/1372423
+
+### socket
+
+https://docs.python.org/zh-cn/3.6/library/socket.html
+
+
+
 ## 界面设计（/文档/GUIx_xxx.png）
 
 <img src="./文档/GUI_1登录.png" alt="登录" style="zoom: 40%;" />
