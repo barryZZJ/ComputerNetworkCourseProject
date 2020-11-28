@@ -1,15 +1,43 @@
 # @Author : ZZJ, CJY
 # GUI界面背后的处理逻辑，被GUI调用
+import re
 
 from Client.Conn import Conn
 from PaintData import Ctrl, PType, SType, Point, PDataBrush, PDataShape, PDataText, PData
 
-
+# ----------------- 登录界面相关 --------------------
 def loginHandler(conn: Conn, serverIP: str) -> bool:
-    """处理登录逻辑，返回登陆是否成功"""
+    """处理登录逻辑，登陆成功后关闭登陆界面，进入主界面。
+
+    :return: 登录是否成功
+    """
+    # 验证IP地址是否合法
+    if not validIp(serverIP):
+        # TODO 温和的处理方法
+        raise ValueError(f"Invalid IP address: {serverIP}")
+
     conn.setServerIP(serverIP)
     # 登录
-    return conn.login()
+    res = conn.login()
+    if res:
+        #TODO 关闭登陆页面
+        #TODO 打开主界面
+        return True
+    else:
+        return False
+
+def validIp(IP: str) -> bool:
+    """检查IP地址是否合法"""
+    pattern = r'^((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}$'
+    return re.match(pattern, IP) is None
+
+# ----------------- 登录界面相关 --------------------
+
+# ----------------- 主界面相关 --------------------
+#TODO 要修改PData的Header了，同时recvData函数也要修改处理逻辑
+def getMemberList(conn):
+    """获取在线成员列表"""
+    pass
 
 # TODO
 def onShareStartHandler():
@@ -24,10 +52,13 @@ def onShareEndHandler():
 # TODO
 def onExitHandler():
     pass
+# ----------------- 主界面相关 --------------------
 
+# ----------------- 白板界面相关 --------------------
+#TODO 注意不要把远程收到的绘制动作当成本地绘制的再发给服务器了。
 # TODO 待完善
-def onPaintHandler(conn:Conn, pType: PType, color, *bodyArgs):
-    """在白板上发生了绘制动作，1.在canvas上画出对应形状；2.生成对应数据发送给server
+def onLocalDrawHandler(conn:Conn, pType: PType, color, *bodyArgs):
+    """本地在白板上发生了绘制动作，1.在canvas上渲染对应形状；2.生成对应数据发送给server
 
     if pType == BRUSH:
         bodyArgs: (pos: Point, thickness=10)
@@ -38,15 +69,16 @@ def onPaintHandler(conn:Conn, pType: PType, color, *bodyArgs):
     """
     # 生成数据
     pData = makePData(pType, color, *bodyArgs)
-    # 本地画形状
+    # 本地画形状并渲染
     drawObject(pData)
-    # 发送
-    # TODO 错误处理
+    renderObject()
+    # 发送给服务器
+    # TODO send发生错误的处理
     conn.sendData(pData)
 
 #TODO 待完善
 def drawObject(pData: PData):
-    """根据pData计算出画该物体所需的参数，并在canvas上渲染对应形状"""
+    """根据本地或远端的pData计算出画该物体所需的参数，并在canvas上渲染对应形状"""
     if pData.pType == PType.BRUSH:
         drawDot(pData.body['pos'], pData.body['thickness'])
     elif pData.pType == PType.SHAPE:
@@ -55,7 +87,7 @@ def drawObject(pData: PData):
         ed = pData.body['ed']
         isHolding = pData.body['isHolding']
         thickness = pData.body['thickness']
-        # TODO 计算所需参数
+        # TODO 计算所需参数，然后调用对应的draw函数
         if sType == SType.LINE:
             pass
         elif sType == SType.RECT:
@@ -67,7 +99,7 @@ def drawObject(pData: PData):
     elif pData.pType == PType.TEXT:
         drawText(pData.body['content'], pData.body['pos'], pData.body['fSize'], pData.body['font'])
     else:
-        raise ValueError(f"Wrong pType {pType}!")
+        raise ValueError(f"Wrong pType {pData.pType}!")
 
     renderObject()
 
@@ -86,10 +118,22 @@ def drawCircle():
 #TODO
 def drawText(content:str, pos: Point, fSize, font):
     pass
+
+# TODO 怎么实现？数据列表？与server转发数据代码配合。
+def undoHandler():
+    """处理撤销信号"""
+    pass
+
+def redoHandler():
+    """处理重做信号"""
+    pass
+
 #TODO
 def renderObject():
     pass
+# ----------------- 白板界面相关 --------------------
 
+# ----------------- 后台逻辑相关 --------------------
 def makePData(pType: PType, color, *bodyArgs):
     """生成PData对象"""
     ctrl = Ctrl.NOOP  # 无操作
@@ -107,9 +151,10 @@ def makePData(pType: PType, color, *bodyArgs):
         raise ValueError(f"Not support value of pType {pType}")
     return pData
 
-# TODO 怎么配合conn.recvData使用
+# TODO 怎么配合conn.recvData使用；以及错误处理
 def onRecvDataHandler(pData: PData):
     """处理来自服务器的数据。控制信号和绘制物体分别处理"""
+    #TODO 还没有点“开始共享”，白板窗体还没显示时怎么处理。
     if pData.ctrl == Ctrl.UNDO:
         undoHandler()
     elif pData.ctrl == Ctrl.REDO:
@@ -117,11 +162,3 @@ def onRecvDataHandler(pData: PData):
     elif pData.ctrl == Ctrl.NOOP:
         drawObject(pData)
 
-# TODO 怎么实现？数据列表？与server转发数据代码配合。
-def undoHandler():
-    """处理撤销信号"""
-    pass
-
-def redoHandler():
-    """处理重做信号"""
-    pass
