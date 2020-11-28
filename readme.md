@@ -4,27 +4,40 @@
 <img src="./文档/GUI_2主界面.png" alt="主界面" style="zoom:40%;" />
 <img src="./文档/GUI_3白板.png" alt="白板" style="zoom: 40%;" />
 
-## 业务逻辑
+## 业务逻辑（/文档/业务逻辑.jpg）
 <img src="./文档/业务逻辑.jpg" alt="业务逻辑" style="zoom:90%;" />
 
 ## 结构介绍
 
 ### 协议设计
+> 共同讨论得出
+
 /PaintData.py : 应用层的协议设计，要传的数据结构的定义。
 
 ### 客户端 /Client/*
+> zzj
 
 /Client/Clinet.py : 客户端主逻辑代码，负责显示各种GUI界面、使用各个模块的功能。
 
+> xkl, zyl
+
 /Client/Conn.py : 连接服务器的类，封装socket。主要有`login`，`sendData`，`recvData`等函数。
 
+> cjy
+
 /Client/GUI.py : 设计客户端的各个界面，在Client.py中调用。
+
+> cjy, zzj
 
 /Client/GUILogic.py : GUI界面背后的处理逻辑代码，被GUI调用。
 
 ### 服务端 /Server/*
 
+> xkl, zyl
+
 /Server/Conn.py : 连接客户端的类，封装socketserver。
+
+> xkl, zyl
 
 /Server/Server.py : 服务端主逻辑代码。处理登录、转发数据等。
 
