@@ -39,6 +39,21 @@ class PData:
             color: color
         }
 
+class PDataBrush(PData):
+    """刷子类型的数据结构"""
+
+    def __init__(self, ctrl, pType, color, pos: Point, thickness=10):
+        """
+        :param pos: 像素点坐标
+        :param thickness: 像素点粗细
+        """
+        super().__init__(ctrl, pType, color)
+        # TODO
+        self.body = {
+
+        }
+        pass
+
 class PDataShape(PData):
     """形状类型的数据结构"""
     def __init__(self, ctrl, pType, color, sType: SType, startPoint: Point, endPoint: Point, isHolding: bool, thickness=10):
@@ -48,21 +63,6 @@ class PDataShape(PData):
         :param endPoint: 终点
         :param isHolding: 是否按住鼠标左键
         :param thickness: 粗细
-        """
-        super().__init__(ctrl, pType, color)
-        # TODO
-        self.body = {
-
-        }
-        pass
-
-class PDataBrush(PData):
-    """刷子类型的数据结构"""
-
-    def __init__(self, ctrl, pType, color, pos: Point, thickness=10):
-        """
-        :param pos: 像素点坐标
-        :param thickness: 像素点粗细
         """
         super().__init__(ctrl, pType, color)
         # TODO
@@ -87,3 +87,8 @@ class PDataText(PData):
 
         }
         pass
+
+class PDataEraser(PData):
+    """橡皮类型的数据结构"""
+    # TODO
+    pass
