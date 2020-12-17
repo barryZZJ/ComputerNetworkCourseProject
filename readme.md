@@ -58,7 +58,7 @@ https://docs.python.org/zh-cn/3.6/library/socketserver.html#module-socketserver
 
 > xkl, zyl
 
-/Client/Conn.py : 连接服务器的类，封装socket。主要有`login`，`sendData`，`recvData`等函数。
+/Client/Conn.py : 连接服务器的类，封装socket。主要有`connect`，`sendData`，`recvData`等函数。
 
 > cjy
 
