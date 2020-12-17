@@ -1,7 +1,7 @@
 # @Author : ZZJ, CJY
 # GUI界面背后的处理逻辑，被GUI调用
 
-from Client.Conn import Conn
+from ClientEnd.Conn import Conn
 from PaintData import Ctrl, PType, SType, Point, PDataBrush, PDataShape, PDataText, PData
 
 

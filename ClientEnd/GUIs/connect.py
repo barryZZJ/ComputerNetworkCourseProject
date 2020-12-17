@@ -12,14 +12,15 @@ class connectWindow(Tk):
     _but_height = '2'
     _text_but = 'Connect'
     _text_ip = 'server IP  '
+    _text_default_ip = '127.0.0.1'
     _text_port = 'server port'
+    _text_default_port = '5000'
     _font = ('Consolas', 11)
 
+    # TODO 改icon等
     def __init__(self):
         super().__init__()
-        # TODO 改标题、icon等
         self.geometry(self._size)
-        self.resizable(0, 0)  # 禁止调整窗口大小
         self.title(self._title)
         self.initMainUi(self)
         self.focus_force()
@@ -38,7 +39,8 @@ class connectWindow(Tk):
         # ip输入
         labelIp = Label(fIp, text=self._text_ip, font=self._font)
         labelIp.pack(side=LEFT)
-        self.entryIp = Entry(fIp, font=self._font)
+        self.serverIp = StringVar(value=self._text_default_ip)
+        self.entryIp = Entry(fIp, font=self._font, textvariable=self.serverIp)
         self.entryIp.focus()
         self.entryIp.pack(side=RIGHT)
 
@@ -50,7 +52,8 @@ class connectWindow(Tk):
         fPort.pack()
         labelPort = Label(fPort, text=self._text_port, font=self._font)
         labelPort.pack(side=LEFT)
-        self.entryPort = Entry(fPort, font=self._font)
+        self.serverPort = StringVar(value=self._text_default_port)
+        self.entryPort = Entry(fPort, font=self._font, textvariable=self.serverPort)
         self.entryPort.pack(side=RIGHT)
 
         labelblock3 = Label(master)
@@ -59,7 +62,6 @@ class connectWindow(Tk):
         # 登录按钮
         but_connect = Button(master,
                              text=self._text_but,
-                             width=self._but_width,
                              height=self._but_height,
                              font=self._font)
         # 绑定触发函数
@@ -74,31 +76,33 @@ class connectWindow(Tk):
         """button逻辑，判断输入是否合法"""
 
         # 验证IP地址是否合法
-        if not validIp(self.getIp()):
-            messagebox.showerror(message=f"Invalid IP address: {self.getIp()}")
+        if not validIp(self.getServerIp()):
+            messagebox.showerror(message=f"Invalid IP address: {self.getServerIp()}")
             self.entryIp.focus()
             return
         # 验证端口号是否合法
-        if not validPort(self.getPort()):
-            messagebox.showerror(message=f"Invalid port: {self.getPort()}")
+        if not validPort(self.getServerPorta()):
+            messagebox.showerror(message=f"Invalid port: {self.getServerPorta()}")
             self.entryPort.focus()
             return
 
-        self.exit()
-
-    def exit(self):
         self.destroy()
 
-    def getIp(self) -> str:
-        return self.entryIp.get()
-    def getPort(self) -> str:
-        return self.entryPort.get()
+    def exit_program(self):
+        exit()
+
+    def getServerIp(self) -> str:
+        return self.serverIp.get()
+    def getServerPorti(self) -> int:
+        return int(self.serverPort.get())
+    def getServerPorta(self) -> str:
+        return self.serverPort.get()
 
     @staticmethod
     def connectFailedHandler():
         '''连接服务器失败时的处理。弹出对应提示框。'''
         showerrorTop("Failed to connect to server, please try again.")
-        connectWindow()
+        return connectWindow()
 
 def showerrorTop(msg):
     # 用于没有主窗体时的showerror
