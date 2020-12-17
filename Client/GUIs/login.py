@@ -22,8 +22,12 @@ class UILogin(Tk):
     def initMainUi(self):
         # 生成主界面
         #TODO 位置
+
+        labelblock = Label(self,height = 2)
+        labelblock.pack()
+
         fIp = Frame(self)
-        fIp.place(x = 35,y = 30)
+        fIp.pack()
         #TODO 一些细节，比如placeholder，点击文本框默认全选，文本框时回车触发按钮行为
         # ip输入
         self.serverIp = StringVar()
@@ -32,14 +36,20 @@ class UILogin(Tk):
         labelIp.pack(side=LEFT)
         entryIp.pack(side=RIGHT)
 
+        labelblock2 = Label(self)
+        labelblock2.pack()
+
         # 端口输入
         fPort = Frame(self)
-        fPort.place(x = 35,y = 70)
+        fPort.pack()
         self.serverPort = StringVar()
         labelPort = Label(fPort, text=self._text_port)
         entryPort = Entry(fPort, textvariable=self.serverPort)
         labelPort.pack(side=LEFT)
         entryPort.pack(side=RIGHT)
+
+        labelblock3 = Label(self)
+        labelblock3.pack()
 
         # 登录按钮
         but_login = ttk.Button(self,
@@ -47,7 +57,7 @@ class UILogin(Tk):
                            width=self._but_width)
         # 绑定触发函数
         but_login['command'] = lambda: loginButHandler(self.conn, self.serverIp.get(), self.serverPort.get())
-        but_login.place(x = 90,y = 120)
+        but_login.pack()
 
 
 if __name__ == '__main__':
