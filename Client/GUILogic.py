@@ -1,37 +1,9 @@
 # @Author : ZZJ, CJY
 # GUI界面背后的处理逻辑，被GUI调用
-import re
 
 from Client.Conn import Conn
 from PaintData import Ctrl, PType, SType, Point, PDataBrush, PDataShape, PDataText, PData
 
-# ----------------- 登录界面相关 --------------------
-def loginHandler(conn: Conn, serverIP: str) -> bool:
-    """处理登录逻辑，登陆成功后关闭登陆界面，进入主界面。
-
-    :return: 登录是否成功
-    """
-    # 验证IP地址是否合法
-    if not validIp(serverIP):
-        # TODO 温和的处理方法
-        raise ValueError(f"Invalid IP address: {serverIP}")
-
-    conn.setServerIP(serverIP)
-    # 登录
-    res = conn.login()
-    if res:
-        #TODO 关闭登陆页面
-        #TODO 打开主界面
-        return True
-    else:
-        return False
-
-def validIp(IP: str) -> bool:
-    """检查IP地址是否合法"""
-    pattern = r'^((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}$'
-    return re.match(pattern, IP) is None
-
-# ----------------- 登录界面相关 --------------------
 
 # ----------------- 主界面相关 --------------------
 #TODO 要修改PData的Header了，同时recvData函数也要修改处理逻辑
@@ -56,6 +28,9 @@ def onExitHandler():
 
 # ----------------- 白板界面相关 --------------------
 #TODO 注意不要把远程收到的绘制动作当成本地绘制的再发给服务器了。
+
+# TODO eraser: find_overlapping函数，tag
+
 # TODO 待完善
 def onLocalDrawHandler(conn:Conn, pType: PType, color, *bodyArgs):
     """本地在白板上发生了绘制动作，1.在canvas上渲染对应形状；2.生成对应数据发送给server

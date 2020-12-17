@@ -1,6 +1,6 @@
 # @Author : ZZJ
 from Client.Conn import Conn
-from Client.GUI import *
+from Client.WhiteBoardGUI import *
 
 class Client:
     """客户端逻辑，调用GUI模块，显示界面"""
