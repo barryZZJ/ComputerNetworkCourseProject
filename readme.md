@@ -9,14 +9,15 @@ https://docs.python.org/zh-cn/3.9/library/tkinter.html
 https://cloud.tencent.com/developer/section/1372347
 
 ### PyQt5（另一个GUI）
+https://doc.qt.io/
 
-
+https://doc.qt.io/qt-5/gettingstarted.html
 
 ### Qpainter（来自PyQt5）
 
 `from PyQt5.QtGui import QPainter`
 
-https://doc.qt.io/qtforpython/PySide2/QtGui/QPainter.html
+https://doc.qt.io/qt-5/qpainter.html
 
 ### turtle 
 
