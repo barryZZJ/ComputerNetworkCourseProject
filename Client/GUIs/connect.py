@@ -1,117 +1,91 @@
 # @Author : ZZJ, CJY
 
 from tkinter import *
-import tkinter.messagebox as messagebox
+from ErrorDialog import ErrorDialog
 
 # 连接窗口
 
 class connectWindow(Tk):
-    _title = "Connection"
     _size = '300x200'
     _but_width = '10'
     _but_height = '2'
-    _text_but = 'Connect'
-    _text_ip = 'server IP  '
-    _text_port = 'server port'
-    _font = ('Consolas', 11)
+    _text_but = '连接'
+    _text_ip = '服务器IP    '
+    _text_port = '服务器端口'
 
     def __init__(self):
+        #TODO 改标题、icon等
         super().__init__()
-        # TODO 改标题、icon等
         self.geometry(self._size)
-        self.resizable(0, 0)  # 禁止调整窗口大小
-        self.title(self._title)
-        self.initMainUi(self)
-        self.focus_force()
+        self.resizable(0, 0) # 禁止调整窗口大小
+        self.initMainUi()
         self.mainloop()
 
-    def initMainUi(self, master):
+
+#TODO 错误提示
+    def initMainUi(self):
         # 生成主界面
-
-        # 占位
-        labelblock = Label(master, height=2)
-        labelblock.pack()
-
-        fIp = Frame(master)
+        #TODO 控件位置
+        fIp = Frame(self)
         fIp.pack()
-
+        #TODO 一些细节，比如placeholder，点击文本框默认全选，文本框时回车触发按钮行为
         # ip输入
-        labelIp = Label(fIp, text=self._text_ip, font=self._font)
+        labelIp = Label(fIp, text=self._text_ip)
         labelIp.pack(side=LEFT)
-        self.entryIp = Entry(fIp, font=self._font)
-        self.entryIp.focus()
+        self.entryIp = Entry(fIp)
         self.entryIp.pack(side=RIGHT)
 
-        labelblock2 = Label(master)
-        labelblock2.pack()
-
         # 端口输入
-        fPort = Frame(master)
-        fPort.pack()
-        labelPort = Label(fPort, text=self._text_port, font=self._font)
+        fPort = Frame(self)
+        fPort.place(x=35, y=70)
+        labelPort = Label(fPort, text=self._text_port)
         labelPort.pack(side=LEFT)
-        self.entryPort = Entry(fPort, font=self._font)
+        self.entryPort = Entry(fPort)
         self.entryPort.pack(side=RIGHT)
 
-        labelblock3 = Label(master)
-        labelblock3.pack()
-
         # 登录按钮
-        but_connect = Button(master,
+        but_connect = Button(self,
                              text=self._text_but,
                              width=self._but_width,
-                             height=self._but_height,
-                             font=self._font)
+                             height=self._but_height)
         # 绑定触发函数
         but_connect['command'] = self.butConnectHandler
-        but_connect.pack()
+        but_connect.place(x=90,y=120)
 
-        # 回车触发按钮行为
-        self.entryIp.bind('<Return>', self.butConnectHandler)
-        self.entryPort.bind('<Return>', self.butConnectHandler)
-
-    def butConnectHandler(self, evnet=None):
+    def butConnectHandler(self):
         """button逻辑，判断输入是否合法"""
 
         # 验证IP地址是否合法
         if not validIp(self.getIp()):
-            messagebox.showerror(message=f"Invalid IP address: {self.getIp()}")
-            self.entryIp.focus()
-            return
-        # 验证端口号是否合法
-        if not validPort(self.getPort()):
-            messagebox.showerror(message=f"Invalid port: {self.getPort()}")
-            self.entryPort.focus()
+
+            # errorDiaglog(f"Invalid IP address: {self.getIp()}").show()
             return
 
+        # 验证端口号是否合法
+        if not validPort(self.getPort()):
+            # TODO
+            # errorDiaglog(f"Invalid port: {self.getPort()}").show()
+            return
         self.exit()
 
     def exit(self):
         self.destroy()
+
+    def connectFailedHandler(self):
+        '''连接服务器失败时的处理。弹出对应提示框。'''
+        # TODO 弹出连接失败提示框
+        self.mainloop()
 
     def getIp(self) -> str:
         return self.entryIp.get()
     def getPort(self) -> str:
         return self.entryPort.get()
 
-    @staticmethod
-    def connectFailedHandler():
-        '''连接服务器失败时的处理。弹出对应提示框。'''
-        showerrorTop("Failed to connect to server, please try again.")
-        connectWindow()
-
-def showerrorTop(msg):
-    # 用于没有主窗体时的showerror
-    temp = Tk()
-    temp.withdraw()
-    messagebox.showerror(message=msg)
-    temp.destroy()
-
 
 def validIp(ip: str) -> bool:
     """检查IP地址是否合法"""
     pattern = r'^((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}$'
-    return re.match(pattern, ip) is not None
+    return re.match(pattern, ip) is None
 
 def validPort(port: str) -> bool:
     """检查port是否合法"""
@@ -120,5 +94,3 @@ def validPort(port: str) -> bool:
 
 if __name__ == '__main__':
     login = connectWindow()
-    connectWindow.connectFailedHandler()
-    # print(validIp('123'))

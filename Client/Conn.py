@@ -18,7 +18,6 @@ class Conn:
             connected = self.connect()
             if not connected:
                 connectWind.connectFailedHandler()
-        connectWind.exit()
 
     def connect(self) -> bool:
         """连接服务器，返回是否成功"""
