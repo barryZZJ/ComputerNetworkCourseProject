@@ -1,6 +1,7 @@
 import socket
-from PaintData import PData
-from ClientEnd.GUIs import connect
+from WhiteBoard.PaintData import PData
+from WhiteBoard.ClientEnd.GUIs import connect
+from WhiteBoard.controlData import pRequest, pResponse, Type
 
 debug = False
 
@@ -18,7 +19,7 @@ class Conn:
         else:
             self.s = socket.socket() # create ip socket
             self.getValuesFromUser()
-            print(f"connected to server at {self.serverIp}:{self.serverPort}")
+        print(f"connected to server at {self.serverIp}:{self.serverPort}")
 
 
     def getValuesFromUser(self):
@@ -39,6 +40,17 @@ class Conn:
         # 获取本机IP
         return self.s.getsockname()[0]
 
+    def getHostId(self) -> str:
+        # 获取本机ID，用于唯一标识一个主机
+        data = pRequest().id().encode()
+        self.s.sendall(data)
+        data = self.s.recv(1024)
+        type, content = pResponse.decode(data)
+        if type == Type.ID:
+            return content
+        else:
+            return ''
+
     def connect(self) -> bool:
         """连接服务器，返回是否成功"""
         try:
@@ -47,6 +59,10 @@ class Conn:
             print("Error:", e)
             return False
         return True
+
+    def disconnect(self):
+        self.s.sendall(pRequest().disconnect().encode())
+        self.s.close()
 
     def sendData(self, data) -> bool:
         """发送数据，返回发送是否成功"""
@@ -58,7 +74,8 @@ class Conn:
 
     def recvData(self) -> PData:
         """接受数据，返回收到的对象"""
-
+        data = self.s.recv(1024)
+        type, content = pResponse.decode(data)
         pass
 
 if __name__ == '__main__':

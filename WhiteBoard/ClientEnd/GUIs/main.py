@@ -1,5 +1,5 @@
 from tkinter import *
-from ClientEnd.Conn import Conn
+from WhiteBoard.ClientEnd.Conn import Conn
 
 class Main(Tk):
     _title = "Main"
@@ -14,8 +14,12 @@ class Main(Tk):
         self.geometry(self._size)
         self.title(self._title)
         self.initMainUi(self)
-        self.focus_force()
+        # self.appendToUserList(f"127.0.0.1 (me)")
+        self.userId = conn.getHostId()
+        print("user id is", self.userId)
+        self.appendToUserList(f"{conn.getHostIp()}-{self.userId} (me)")
         self.conn = conn
+        self.focus_force()
         self.mainloop()
 
 
@@ -23,11 +27,8 @@ class Main(Tk):
         lf = LabelFrame(master, text=self._lf_text, font=self._font)
         lf.pack(expand=1, fill=Y, side=LEFT, anchor=W)
 
-        lst = Listbox(lf)
-        #debug
-        lst.insert(0, ["127.0.0.1(me)"])
-        # lst.insert(0, [self.conn.getHostIp()])
-        lst.pack(expand=1, fill=Y)
+        self.lst = Listbox(lf)
+        self.lst.pack(expand=1, fill=Y)
 
         but = Button(master, text=self._but_text, font=self._font,
                      height=self._but_height)
@@ -38,6 +39,10 @@ class Main(Tk):
         # 成功打开白板后改为“结束白板”
         # 结束共享后改为“打开白板”
         return
+
+    def appendToUserList(self, content):
+        # 在listbox中添加新的成员信息
+        self.lst.insert(self.lst.size(), content)
 
 if __name__ == '__main__':
     Main(None)
