@@ -58,17 +58,17 @@ class Server:
 
                 newCl = ClientObj(conn, self.nextUserId)
                 clients.append(newCl)
-                newCl.start()
+                # newCl.start()
 
 
                 data = conn.recv(1024) # 阻塞，收到数据后唤醒
-                type = pRequest.decode(data)
-                print("receive from", addr, "-", type)
-                if type == Type.ID:
+                pReq = pRequest().decode(data)
+                print("receive from", addr, "-", pReq.type)
+                if pReq.type == Type.ID:
                     conn.sendall(pResponse().makeId(self.nextUserId).encode())
-                    print("respond to", addr, "-", type, ":", self.nextUserId)
+                    print("respond to", addr, "-", pReq.type, ":", self.nextUserId)
                     self.mutexIncUserId()
-                elif type == Type.DISCONNECT:
+                elif pReq.type == Type.DISCONNECT:
                     exitFlag = True
 
         # 连接关闭
@@ -102,10 +102,11 @@ class ClientObj(Thread):
         pass
 
     def run(self):
-        while self.running:
-            try:
-                cdata = self.conn.recv(1024)  # 阻塞，收到数据后唤醒
-                self.handleCtrlData(pResponse.decode(cdata))
+        # while self.running:
+        #     try:
+        #         cdata = self.conn.recv(1024)  # 阻塞，收到数据后唤醒
+        #         self.handleCtrlData(pResponse.decode(cdata))
+        pass
 
 if __name__ == '__main__':
     Server()
