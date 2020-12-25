@@ -92,7 +92,9 @@ class mylable(QLabel):
         Label_painter.drawPixmap(2, 2, self.pixmap)
 
     def mousePressEvent(self, event: QMouseEvent):
+        # 鼠标按下
         if event.button() == Qt.LeftButton:
+            print("mouse pressed")
             self.x1 = event.x()
             self.y1 = event.y()
             if self.straightSign == 0:
@@ -107,7 +109,7 @@ class mylable(QLabel):
 
 
     def mouseMoveEvent(self, event):
-
+        print("mouse move")
         if self.flag and self.shape == 1:
             self.x0 = self.x1
             self.y0 = self.y1
@@ -121,13 +123,15 @@ class mylable(QLabel):
 
 
     def mouseReleaseEvent(self, event):
+        #鼠标弹起
         if event.button() == Qt.LeftButton:
+            print("mouse released")
             self.straightlineXEnd = event.x()
             self.straightlineYEnd = event.y()
             self.straightSign = 0
 
-            print("self.straightlineXEnd: ", self.straightlineXEnd)
-            print("self.straightlineYEnd: ", self.straightlineYEnd)
+            # print("self.straightlineXEnd: ", self.straightlineXEnd)
+            # print("self.straightlineYEnd: ", self.straightlineYEnd)
             if self.isDrawStraightline:
                 self.drawStraightline = 1
             elif self.isDrawCircle:
@@ -187,7 +191,6 @@ class WhiteBoard(QMainWindow):
         self.menubar.addAction(Text)
 
         # 主页面
-        self.setWindowIcon(QIcon("1216867.png"))
         self.setWindowTitle("Drawing Board")
 
         eraser.triggered.connect(self.erase)
@@ -256,7 +259,7 @@ class WhiteBoard(QMainWindow):
         self.lb.isDrawRec = 0
         self.lb.isDrawText = 0
 
-def main():
+def startWhiteBoard():
     app = QApplication([])
     the_window = WhiteBoard()
     the_window.show()
