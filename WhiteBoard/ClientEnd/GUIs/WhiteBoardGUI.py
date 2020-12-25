@@ -12,6 +12,7 @@ PATHTOSTRAIGHTLINE = os.path.join(RESOURCES, "StraightLine.png")
 PATHTOPEN = os.path.join(RESOURCES, "pen.png")
 PATHTOERASER = os.path.join(RESOURCES, "eraser.png")
 PATHTOCOLOR = os.path.join(RESOURCES, "color.png")
+PATHTOWIDTH = os.path.join(RESOURCES, "changewidth.png")
 
 print(" === ",PATHTOCOLOR)
 class mylable(QLabel):
@@ -45,6 +46,7 @@ class mylable(QLabel):
     drawCircle = 0
     drawRec = 0
     drawText = 0
+    drawLine = 1
 #=======
     flag = False
 
@@ -54,6 +56,7 @@ class mylable(QLabel):
         self.pixmap.fill(Qt.white)
         self.setStyleSheet("border: 2px solid white")
         self.Color = Qt.black  # pen color: defult:blue
+        self.trueColor = Qt.black
         self.penwidth = 4  # pen width : default:4
         self.listX = []
         self.listY = []
@@ -73,8 +76,10 @@ class mylable(QLabel):
             painter.drawLine(self.straightlineXBegin, self.straightlineYBegin, self.straightlineXEnd, self.straightlineYEnd)
             self.drawStraightline = 0
 
-        elif self.isDrawLine:
+        elif self.isDrawLine and self.drawLine:
+            print("painter.drawLine(",self.x0, self.y0, self.x1, self.y1,")")
             painter.drawLine(self.x0, self.y0, self.x1, self.y1)
+            self.drawLine = 0
 
         elif self.isDrawCircle and self.drawCircle:
             painter.drawEllipse(self.straightlineXBegin, self.straightlineYBegin, self.straightlineXEnd - self.straightlineXBegin, self.straightlineYEnd - self.straightlineYBegin)
@@ -109,6 +114,7 @@ class mylable(QLabel):
     def mouseMoveEvent(self, event):
 
         if self.flag and self.shape == 1:
+            self.drawLine = 1
             self.x0 = self.x1
             self.y0 = self.y1
             self.x1 = event.x()
@@ -174,6 +180,9 @@ class WhiteBoard(QMainWindow):
         Text = QAction(QIcon(PATHTOTEXT), "Text", self)
         Text.setToolTip("Text")
 
+        changeWidth = QAction(QIcon(PATHTOWIDTH), "Width", self)
+        changeWidth.setToolTip("Width")
+
 
         #工具栏
         self.menubar = self.addToolBar("ToolBar")
@@ -185,7 +194,7 @@ class WhiteBoard(QMainWindow):
         self.menubar.addAction(Circle)
         self.menubar.addAction(Rec)
         self.menubar.addAction(Text)
-
+        self.menubar.addAction(changeWidth)
         # 主页面
         self.setWindowIcon(QIcon("1216867.png"))
         self.setWindowTitle("Drawing Board")
@@ -197,20 +206,23 @@ class WhiteBoard(QMainWindow):
         Circle.triggered.connect(self.drawCircle)
         Rec.triggered.connect(self.drawRec)
         Text.triggered.connect(self.drawText)
+        changeWidth.triggered.connect(self.changeWidth)
 
     def chooseColor(self):
         Color = QColorDialog.getColor()  # color是Qcolor
         if Color.isValid():
             self.lb.Color = Color
+            self.lb.trueColor = Color
 
     def erase(self):
         self.clearTheSign()
         self.lb.isDrawLine = 1
+        self.lb.trueColor = self.lb.Color
         self.lb.Color = Qt.white
         self.lb.setCursor(Qt.CrossCursor)
         self.lb.penwidth = self.lb.penwidth
 
-    def choose_width(self):
+    def changeWidth(self):
         width, ok = QInputDialog.getInt(self, '选择画笔粗细', '请输入粗细：', min=1, step=1)
         if ok:
             self.lb.penwidth = width
@@ -220,30 +232,30 @@ class WhiteBoard(QMainWindow):
     def drawLine(self):
         self.clearTheSign()
         self.lb.isDrawLine = 1
-        self.lb.Color = Qt.black
+        self.lb.Color = self.lb.trueColor
         self.lb.setCursor(Qt.CrossCursor)
         self.lb.penwidth = self.lb.penwidth
 
     def drawStraightline(self):
         self.clearTheSign()
-        self.lb.Color = Qt.black
+        self.lb.Color = self.lb.trueColor
         self.lb.isDrawStraightline = 1
 
     def drawCircle(self):
         self.clearTheSign()
-        self.lb.Color = Qt.black
+        self.lb.Color = self.lb.trueColor
         self.lb.isDrawCircle = 1
 
     def drawRec(self):
         self.clearTheSign()
-        self.lb.Color = Qt.black
+        self.lb.Color = self.lb.trueColor
         self.lb.isDrawRec = 1
 
     def drawText(self):
         text, okPressed = QInputDialog.getText(self, "Get text", "请输入文字信息:", QLineEdit.Normal, "")
         if okPressed and text != '':
             self.lb.text = text
-        self.lb.Color = Qt.black
+        self.lb.Color = self.lb.trueColor
         self.clearTheSign()
         self.lb.isDrawText = 1
 
