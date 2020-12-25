@@ -48,49 +48,31 @@ class WhiteBoard(QLabel):
         self.setCursor(Qt.CrossCursor)
         self.pData.setToBrush()
 
-    def updateDotArgs(self):
-        self.pData.updateArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
-
     def setToLine(self):
         print('set to line')
         self.setCursor(Qt.CrossCursor)
         self.pData.setToShape(SType.LINE)
-
-    def updateLineArgs(self):
-        self.pData.updateArgs(SType.LINE, (self.x1, self.y1), (self.x2, self.y2), self.width)
 
     def setToCircle(self):
         print("set to circle")
         self.setCursor(Qt.CrossCursor)
         self.pData.setToShape(SType.CIRCLE)
 
-    def updateCircleArgs(self):
-        self.pData.updateArgs(SType.CIRCLE, (self.x1, self.y1), (self.x2, self.y2), self.width)
-
     def setToRec(self):
         print("set to rec")
         self.setCursor(Qt.CrossCursor)
         self.pData.setToShape(SType.RECT)
-
-    def updateRecArgs(self):
-        self.pData.updateArgs(SType.RECT, (self.x1, self.y1), (self.x2, self.y2), self.width)
 
     def setToText(self):
         print("set to text")
         self.setCursor(Qt.ArrowCursor)
         self.pData.setToText()
 
-    def updateTextArgs(self):
-        self.pData.updateArgs(self.text, (self.x1, self.y1))
-
     def setToEraser(self):
         #TODO 自定义鼠标形状（png）
         print("set to eraser")
         self.setCursor(Qt.CrossCursor)
         self.pData.setToEraser()
-
-    def updateEraserArgs(self):
-        self.pData.updateArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
 
     def paintEvent(self, event):
         painter = QPainter(self.pixmap)
@@ -104,35 +86,35 @@ class WhiteBoard(QLabel):
         if (self.pData.isBrush() or self.pData.isEraser()) and self.isMouseDown:
             # 笔刷画点、橡皮，使用同一种画法
             if self.pData.isBrush():
-                self.updateDotArgs()
+                self.pData.updateArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
                 print("draw dot")
             else:
-                self.updateEraserArgs()
+                self.pData.updateArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
                 print("draw eraser")
             painter.drawLine(self.x1, self.y1, self.x2, self.y2)
 
         elif self.pData.isLine() and self.isMouseUp:
             # 画直线
             print("draw line")
-            self.updateLineArgs()
+            self.pData.updateArgs(SType.LINE, (self.x1, self.y1), (self.x2, self.y2), self.width)
             painter.drawLine(self.x1, self.y1, self.x2, self.y2)
 
         elif self.pData.isCircle() and self.isMouseUp:
             # 画圆
             print("draw circle")
-            self.updateCircleArgs()
+            self.pData.updateArgs(SType.CIRCLE, (self.x1, self.y1), (self.x2, self.y2), self.width)
             painter.drawEllipse(self.x1, self.y1, self.x2 - self.x1, self.y2 - self.y1)
 
         elif self.pData.isRect() and self.isMouseUp:
             # 画矩形
             print("draw rec")
-            self.updateRecArgs()
+            self.pData.updateArgs(SType.RECT, (self.x1, self.y1), (self.x2, self.y2), self.width)
             painter.drawRect(self.x1, self.y1, self.x2 - self.x1, self.y2 - self.y1)
 
         elif self.pData.isText() and self.text != "" and self.isMouseDown:
             # 画文字
             print("draw text")
-            self.updateTextArgs()
+            self.pData.updateArgs(self.text, (self.x1, self.y1))
             painter.drawText(self.x1, self.y1,self.text)
 
         #TODO
