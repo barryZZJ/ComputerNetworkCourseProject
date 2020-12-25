@@ -38,6 +38,7 @@ class Main(Tk):
     def startWhiteBoardHandler(self):
         # 成功打开白板后改为“结束白板”
         # 结束共享后改为“打开白板”
+
         return
 
     def appendToUserList(self, content):

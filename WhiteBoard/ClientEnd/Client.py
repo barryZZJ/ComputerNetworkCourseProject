@@ -14,6 +14,8 @@ class Client:
         self.conn = Conn()
         # 进入主窗体
         Main(self.conn)
+
+
         self.conn.disconnect()
 
     def start(self):

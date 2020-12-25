@@ -57,6 +57,8 @@ class Server:
 
                 newCl = ClientObj(conn, self.nextUserId)
                 clients.append(newCl)
+                newCl.start()
+
 
                 data = conn.recv(1024) # 阻塞，收到数据后唤醒
                 type = pRequest.decode(data)
@@ -90,10 +92,19 @@ class ClientObj(Thread):
         super().__init__()
         self.conn = conn
         self.id = id
+        self.running = True
 
-    def start(self):
-        data = self.conn.recv(1024)  # 阻塞，收到数据后唤醒
+    def terminate(self):
+        self.running = False
 
+    def handleCtrlData(self, pResponse: pResponse):
+        pass
+
+    def run(self):
+        while self.running:
+            try:
+                cdata = self.conn.recv(1024)  # 阻塞，收到数据后唤醒
+                self.handleCtrlData(pResponse.decode(cdata))
 
 if __name__ == '__main__':
     Server()
