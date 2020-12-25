@@ -2,7 +2,7 @@
 
 from tkinter import *
 import tkinter.messagebox as messagebox
-
+import re
 # 连接窗口
 
 class connectWindow(Tk):

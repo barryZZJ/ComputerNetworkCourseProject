@@ -45,9 +45,9 @@ class Conn:
         data = pRequest().id().encode()
         self.s.sendall(data)
         data = self.s.recv(1024)
-        type, content = pResponse.decode(data)
-        if type == Type.ID:
-            return content
+        pResp = pResponse().decode(data)
+        if pResp.type == Type.ID:
+            return pResp.content
         else:
             return ''
 
@@ -75,7 +75,7 @@ class Conn:
     def recvData(self) -> PData:
         """接受数据，返回收到的对象"""
         data = self.s.recv(1024)
-        type, content = pResponse.decode(data)
+        pResp = pResponse().decode(data)
         pass
 
 if __name__ == '__main__':

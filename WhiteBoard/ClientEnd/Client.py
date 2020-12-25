@@ -1,5 +1,10 @@
 # @Author : ZZJ
 import sys, os
+
+from PyQt5.QtWidgets import QApplication
+
+from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoard
+
 module_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(module_path)        # 导入的绝对路径
 
@@ -18,10 +23,12 @@ class Client:
 
         self.conn.disconnect()
 
+
     def start(self):
         """启动客户端程序。按照流程图过程实现。"""
         #TODO 逻辑在GUI里写还是在这里写？
         pass
+
 
 
 

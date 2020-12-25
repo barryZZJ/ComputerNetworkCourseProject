@@ -4,6 +4,7 @@
 #TODO 考虑需不需要把收到的形状存在列表里；重做时server传什么内容（重做信号还是需要重做的形状信息）
 #TODO 可以给每个object一个标号，删除的时候通过标号判断
 import sys, os
+
 module_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(module_path)        # 导入的绝对路径
 import socket

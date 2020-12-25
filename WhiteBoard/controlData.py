@@ -37,11 +37,10 @@ class pRequest:
         data = bytes(self.type)
         return data
 
-    @staticmethod
-    def decode(data: bytes) -> Type:
+    def decode(self, data: bytes):
         type = data.decode(encoding)
-        type = Type(int(type))
-        return type
+        self.type = Type(int(type))
+        return self
 
 
 class pResponse:
@@ -63,11 +62,10 @@ class pResponse:
         data.append(self.content)
         return sep.join(data).encode(encoding)
 
-    @staticmethod
-    def decode(data: bytes) -> Tuple[Type, str]:
-        type, content = data.decode(encoding).split(sep)
-        type = Type(int(type))
-        return type, content
+    def decode(self, data: bytes):
+        type, self.content = data.decode(encoding).split(sep)
+        self.type = Type(int(type))
+        return self
 
 if __name__ == '__main__':
 
