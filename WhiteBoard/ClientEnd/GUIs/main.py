@@ -3,7 +3,7 @@ from tkinter import *
 from PyQt5.QtWidgets import QApplication
 import sys
 from WhiteBoard.ClientEnd.Conn import Conn
-from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoard, main
+from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import startWhiteBoard
 
 
 class Main(Tk):
@@ -43,7 +43,7 @@ class Main(Tk):
     def startWhiteBoardHandler(self):
         # 成功打开白板后改为“结束白板”
         # 结束共享后改为“打开白板”
-        main()
+        startWhiteBoard()
 
 
     def appendToUserList(self, content):
