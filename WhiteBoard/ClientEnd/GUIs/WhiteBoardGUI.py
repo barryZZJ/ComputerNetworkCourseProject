@@ -173,7 +173,7 @@ class WhiteBoardWindow(QMainWindow):
 
         # 设置画板
         self.wb = WhiteBoard(self)
-        self.wb.setGeometry(10, 10, 750, 501)
+        self.wb.setGeometry(10, 50, 750, 501)
         # 橡皮
         eraser = QAction(QIcon(PATHTOERASER), "Eraser", self)
         eraser.setToolTip("Eraser")
@@ -202,7 +202,7 @@ class WhiteBoardWindow(QMainWindow):
 
         #工具栏
         self.menubar = self.addToolBar("ToolBar")
-
+        self.menubar.setMovable(False)
         self.menubar.addAction(eraser)
         self.menubar.addAction(color)
         self.menubar.addAction(pen)
