@@ -4,7 +4,7 @@ from threading import Thread
 from time import sleep
 
 from PyQt5.QtWidgets import QMainWindow, QApplication,  QLineEdit, QInputDialog, QColorDialog, QLabel, QAction, QMessageBox
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QColor, QBrush, QFont, QMouseEvent
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QColor, QBrush, QFont, QMouseEvent, QCursor
 from PyQt5.QtCore import Qt, QRect, QCoreApplication
 
 from WhiteBoard.paintData import PData, PDataBrush, PDataShape, PDataEraser, Ctrl, PType, SType
@@ -21,7 +21,7 @@ PATHTOWIDTH = os.path.join(RESOURCES, "changewidth.png")
 
 
 class WhiteBoardCanvas(QLabel):
-#TODO 窗体大小固定
+#TODO 窗体大小固定(已完成)
 
     def __init__(self, parent):
         QLabel.__init__(self, parent)
@@ -68,9 +68,11 @@ class WhiteBoardCanvas(QLabel):
         self.pData.setToText()
 
     def setToEraser(self):
-        #TODO 自定义鼠标形状（png）
+        #TODO 自定义鼠标形状（png） (已完成，但是橡皮好像不能用？)
         print("set to eraser")
-        self.setCursor(Qt.CrossCursor)
+        myPixmp = QPixmap(PATHTOERASER).scaled(30,30)
+        myCursor = QCursor(myPixmp)
+        self.setCursor(myCursor)
         self.pData.setToEraser()
 
     def paintEvent(self, event):
@@ -163,7 +165,8 @@ class WhiteBoardWindow(QMainWindow):
         self.initUi()
 
     def initUi(self):
-        self.resize(800, 600)
+        self.resize(770, 570)
+        self.setFixedSize(770, 570)
 
         # 设置画板
         self.wb = WhiteBoardCanvas(self)
