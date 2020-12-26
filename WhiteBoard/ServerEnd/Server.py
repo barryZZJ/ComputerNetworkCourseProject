@@ -1,25 +1,19 @@
-#TODO
-# loginHandler 处理登录行为
-# pDataHandler 处理收到pData时的行为，如加入到形状列表、把形状转发给其他client。（每个功能写一个函数比较好）
-#TODO 考虑需不需要把收到的形状存在列表里；重做时server传什么内容（重做信号还是需要重做的形状信息）
-#TODO 可以给每个object一个标号，删除的时候通过标号判断
 import sys, os
-from typing import List
-
-module_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-sys.path.append(module_path)        # 导入的绝对路径
+from typing import Dict
+module_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(module_path)        # 导入绝对路径
 import socket
 from threading import Thread, Lock
 from WhiteBoard.ClientEnd.GUIs.connect import validIp, validPort
-from WhiteBoard.controlData import PRequest, PResponse, CType
+from WhiteBoard.controlData import CRequest, CResponse, CType
 
-# TODO 用分配一个id识别不同主机，用于转发时的识别，客户端发现 昵称/id 与自己相同则不画。
+#TODO log forward to new user
 
 # 全局变量
 BUFSIZE = 1024
 # 存客户端线程实例
-users = {}
-userinfos = {}
+users = {} # type: Dict[str, User]
+userInfos = {}
 # 存服务器的数据，用于图像的复现
 Logs = {}
 
@@ -48,11 +42,18 @@ class Server(socket.socket):
         while True:
             conn, addr = self.accept() # 阻塞，每收到一个连接就唤醒
             # 新建一个处理该连接的ClientObj线程
-            print('connected by', addr)
             user = User(conn, self.nextUserId, addr)
+            print('connected by', addr, '-', user.id)
+            # 记入字典
             users[user.id] = user
-            userinfos[user.id] = user.ip
+            userInfos[user.id] = user.ip
+            # 启动对应的线程，转发数据
             user.start()
+            # 每当新用户连接时，发送id给该用户
+            user.assignId()
+            # 每当新用户连接时或有用户断开时，发送userinfos给所有用户
+            for id, user in users.items():
+                user.sendUserInfos()
 
     @classmethod
     def mutexIncUserId(cls):
@@ -77,51 +78,57 @@ class User(Thread):
         self.alive = True
         self.ip = addr[0]
 
-    def handleCtrlRequest(self, pReq: PRequest):
-        print("receive from", self.ip, self.id, "-", pReq.type)
-        if pReq.type == CType.ID:
-            self.handleIDRequest()
-        elif pReq.type == CType.ALL_USERINFOS:
-            self.sendAllUsers()
-        elif pReq.type == CType.PDATA:
-            pass
-        elif pReq.type == CType.DISCONNECT:
+    def handleCtrlRequest(self, cReq: CRequest):
+        print("receive from", self.ip, '-', self.id, "-", cReq.ctype.name)
+        if cReq.ctype == CType.PDATA:
+            print(cReq.body)
+            self.forwardContent(cReq.body)
+        elif cReq.ctype == CType.DISCONNECT:
             self.handleDisconnRequest()
 
-
-    def handleIDRequest(self):
-        pResp = PResponse().id(self.id)
+    def assignId(self):
+        cResp = CResponse().id(self.id)
         try:
-            self.conn.sendall(pResp.encode())
-            print("respond to", self.ip, self.id)
+            self.conn.sendall(cResp.encode())
+            print("respond to", self.ip, '-', self.id)
             Server.mutexIncUserId()
         except Exception as e:
-            print("handleIDRequest failure")
+            print("assignId failure")
             print(e)
+
+    def forwardContent(self, bodyStr):
+        # 把内容封装到response里，转发给除了自己之外的所有用户
+        cRespBytes = CResponse(CType.PDATA, bodyStr).encode()
+        for id, user in users.items():
+            if id != self.id:
+                user.conn.sendall(cRespBytes)
 
     def handleDisconnRequest(self):
         # 连接关闭
         self.conn.close()
         del users[self.id]
-        del userinfos[self.id]
-        print("connection from", self.ip, self.id, "is closed")
+        del userInfos[self.id]
+        print("connection from", self.ip, '-', self.id, "is closed")
         Server.mutexDecUserId()
         self.alive = False
+        # 每当新用户连接时或有用户断开时，发送userinfos给所有用户
+        for id, user in users.items():
+            user.sendUserInfos()
 
-    def sendAllUsers(self):
-        pResp = PResponse().allUsers(userinfos)
+    def sendUserInfos(self):
+        cResp = CResponse().userInfos(userInfos)
         try:
-            self.conn.sendall(pResp.encode())
-            print("send client info to", self.ip, self.id)
+            self.conn.sendall(cResp.encode())
+            print("send userinfo", cResp.contents, "to", self.ip, '-', self.id)
         except Exception as e:
-            print("sendAllUsers failure")
+            print("sendUserInfos failure")
             print(e)
 
     def run(self):
         while self.alive:
             try:
                 cdata = self.conn.recv(BUFSIZE)  # 阻塞，收到数据后唤醒
-                self.handleCtrlRequest(PRequest().decode(cdata))
+                self.handleCtrlRequest(CRequest.decode(cdata))
             except ConnectionResetError:
                 pass
             except ConnectionAbortedError:

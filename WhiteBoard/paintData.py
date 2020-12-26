@@ -1,12 +1,7 @@
 from enum import Enum
-from typing import Tuple
+from typing import Tuple, TypeVar, Type
 
-class Ctrl(Enum):
-    """枚举类。
-    控制位，0-无操作，1-撤销，2-重做"""
-    NOOP = 0
-    UNDO = 1
-    REDO = 2
+ENCODING = 'utf8'
 
 class PType(Enum):
     """绘制类型，0-刷子，1-形状，2-文字，3-橡皮"""
@@ -14,6 +9,8 @@ class PType(Enum):
     SHAPE = 1
     TEXT = 2
     ERASER = 3
+    def __str__(self):
+        return str(self.value)
 
 class SType(Enum):
     """形状类型，0-直线，1-矩形，2-圆，3-不适用（不是画形状）"""
@@ -21,22 +18,48 @@ class SType(Enum):
     RECT = 1
     CIRCLE = 2
     NA = 3
+    def __str__(self):
+        return str(self.value)
+
+TPDataBody = TypeVar('TPDataBody', bound='PDataBody')
+TPData = TypeVar('TPData', bound='PData')
 
 class PData:
-    """传输的数据结构，父类定义Header，子类定义Body"""
-    def __init__(self, ctrl: Ctrl, pType: PType, color):
+    """传输的数据结构"""
+    SEP = '_'
+    def __init__(self, pType: PType, color: int, body:Type[TPDataBody]=None):
         """
-        :param ctrl: 控制位，0-无操作，1-撤销，2-重做 TODO
         :param pType: 绘制类型，0-刷子，1-形状，2-文字，3-橡皮
         :param color: 颜色
         """
         # Header
-        self.ctrl = ctrl
         self.pType = pType
         self.color = color
 
         # Body
-        self.data = None
+        self.body = body
+
+    def __str__(self):
+        # 转为字符串
+        l = [str(self.pType), str(self.color), str(self.body)]
+        return PData.SEP.join(l)
+
+    @staticmethod
+    def decodeFromStr(pdata: str)-> TPData:
+        l = pdata.split(PData.SEP)
+        pType = PType(int(l[0]))
+        color = int(l[1])
+        body = None
+        if pType == PType.BRUSH:
+            body = PDataBrush.decodeFromStr(l[2])
+        elif pType == PType.SHAPE:
+            body = PDataShape.decodeFromStr(l[2])
+        elif pType == PType.TEXT:
+            body = PDataText.decodeFromStr(l[2])
+        elif pType == PType.ERASER:
+            body = PDataEraser.decodeFromStr(l[2])
+            
+        return PData(pType, color, body)
 
     def setToBrush(self):
         self.pType = PType.BRUSH
@@ -49,13 +72,13 @@ class PData:
         self.updateArgs(sType)
 
     def isLine(self):
-        return self.pType == PType.SHAPE and self.data.sType == SType.LINE
+        return self.pType == PType.SHAPE and self.body.sType == SType.LINE
 
     def isRect(self):
-        return self.pType == PType.SHAPE and self.data.sType == SType.RECT
+        return self.pType == PType.SHAPE and self.body.sType == SType.RECT
 
     def isCircle(self):
-        return self.pType == PType.SHAPE and self.data.sType == SType.CIRCLE
+        return self.pType == PType.SHAPE and self.body.sType == SType.CIRCLE
 
     def setToText(self):
         self.pType = PType.TEXT
@@ -81,16 +104,21 @@ class PData:
             args: st, ed, width
         '''
         if self.pType == PType.BRUSH:
-            self.data = PDataBrush(*args)
+            self.body = PDataBrush(*args)
         elif self.pType == PType.SHAPE:
-            self.data = PDataShape(*args)
+            self.body = PDataShape(*args)
         elif self.pType == PType.TEXT:
-            self.data = PDataText(*args)
+            self.body = PDataText(*args)
         elif self.pType == PType.ERASER:
-            self.data = PDataEraser(*args)
+            self.body = PDataEraser(*args)
 
+class PDataBody:
+    """传输的数据结构的body部分"""
+    SEP = '^'
+    def __str__(self):
+        pass
 
-class PDataBrush:
+class PDataBrush(PDataBody):
     """刷子类型的数据结构"""
     def __init__(self, st: Tuple, ed: Tuple, width):
         """
@@ -102,34 +130,67 @@ class PDataBrush:
         self.ed = ed
         self.width = width
 
+    def __str__(self):
+        l = [str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), self.width]
+        return PDataBody.SEP.join(l)
 
-class PDataShape:
+    @staticmethod
+    def decodeFromStr(body: str) -> TPDataBody:
+        l = body.split(PDataBody.SEP)
+        st = (int(l[0]), int(l[1]))
+        ed = (int(l[2]), int(l[3]))
+        width = int(l[4])
+        return PDataBrush(st, ed, width)
+
+class PDataShape(PDataBody):
     """形状类型的数据结构"""
-    def __init__(self, sType: SType, st: Tuple=None, ed: Tuple=None, width=10):
+    def __init__(self, sType: SType, st: Tuple, ed: Tuple, width):
         """
         :param sType: 形状类型，0-直线，1-矩形，2-圆
         :param st: 起点
         :param ed: 终点
         :param width: 笔刷粗细
         """
-        # TODO
         self.sType = sType
-        # ...
-        pass
+        self.st = st
+        self.ed = ed
+        self.width = width
+        
+    def __str__(self):
+        l = [str(self.sType), str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), self.width]
+        return PDataBody.SEP.join(l)
 
-class PDataText:
+    @staticmethod
+    def decodeFromStr(body: str) -> TPDataBody:
+        l = body.split(PDataBody.SEP)
+        sType = SType(int(l[0]))
+        st = (int(l[1]), int(l[2]))
+        ed = (int(l[3]), int(l[4]))
+        width = int(l[5])
+        return PDataShape(sType, st, ed, width)
+
+class PDataText(PDataBody):
     """文字类型的数据结构"""
-    # TODO 字体、字号默认值
     def __init__(self, content: str, pos: Tuple):
         """
         :param content: 文本内容
         :param pos: 位置
         """
-        # TODO
+        self.content = content
+        self.pos = pos
+        
+    def __str__(self):
+        l = [self.content, str(self.pos[0]), str(self.pos[1])]
+        return PDataText.SEP.join(l)
+    
+    @staticmethod
+    def decodeFromStr(body: str) -> TPDataBody:
+        l = body.split(PDataBody.SEP)
+        content = l[0]
+        pos = (int(l[1]), int(l[2]))
+        return PDataText(content, pos)
 
-        pass
-
-class PDataEraser:
+class PDataEraser(PDataBody):
     """橡皮类型的数据结构"""
     def __init__(self, st: Tuple, ed: Tuple, width):
         """
@@ -140,3 +201,15 @@ class PDataEraser:
         self.st = st
         self.ed = ed
         self.width = width
+    
+    def __str__(self):
+        l = [str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), self.width]
+        return PDataBody.SEP.join(l)
+
+    @staticmethod
+    def decodeFromStr(body: str) -> TPDataBody:
+        l = body.split(PDataBody.SEP)
+        st = (int(l[0]), int(l[1]))
+        ed = (int(l[2]), int(l[3]))
+        width = int(l[4])
+        return PDataEraser(st, ed, width)

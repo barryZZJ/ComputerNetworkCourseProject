@@ -1,80 +1,94 @@
 import json
 from builtins import bytes
 from enum import Enum, auto
-from types import DynamicClassAttribute
 
-#! 使用request - response模式，客户端发送请求，服务器返回相应
+from WhiteBoard.paintData import PData
 
 ENCODING = 'utf8'
-SEP = ';'
+CSEP = ';'
 
 class CType(Enum):
     ID = auto() # 用户的ID
-    ALL_USERINFOS = auto() # 所有用户
+    USERINFOS = auto() # 所有用户
     PDATA = auto() # 画图数据
     DISCONNECT = auto() # 断开连接
 
-    @DynamicClassAttribute
-    def value(self):
+    def __str__(self):
         """The value of the Enum member."""
-        return str(self._value_)
+        return str(self.value)
 
     def __bytes__(self):
-        return bytes(self.value, ENCODING)
+        return str(self.value).encode(ENCODING)
 
 
-class PRequest:
-    def __init__(self):
-        self.type = None
+class CRequest:
+    def __init__(self, ctype=None, body=None):
+        self.ctype = ctype
+        self.body = body
 
-    def id(self):
-        self.type = CType.ID
-        return self
-
-    def allUsers(self):
-        self.type = CType.ALL_USERINFOS
+    def pData(self, pData: PData):
+        self.ctype = CType.PDATA
+        self.body = pData
         return self
 
     def disconnect(self):
-        self.type = CType.DISCONNECT
+        self.ctype = CType.DISCONNECT
         return self
 
-    def encode(self):
-        data = bytes(self.type)
-        return data
+    def __str__(self):
+        l = [str(self.ctype), '' if self.body is None else str(self.body)]
+        return CSEP.join(l)
 
-    def decode(self, data: bytes):
-        type = data.decode(ENCODING)
-        self.type = CType(int(type))
-        return self
+    def encode(self) -> bytes:
+        return str(self).encode(ENCODING)
 
+    @staticmethod
+    def decode(cdata: bytes):
+        l = cdata.decode(ENCODING).split(CSEP)
+        type = CType(int(l[0]))
+        bodystr = None
+        if l[1] != '':
+            bodystr = l[1]
+        return CRequest(type, bodystr)
 
-class PResponse:
-    def __init__(self):
-        self.type = None
-        self.contents = None
+class CResponse:
+    def __init__(self, ctype=None, contents=None):
+        self.ctype = ctype
+        self.contents = contents
 
     def mkResponse(self, type: CType, contents: str):
-        self.type = type
+        self.ctype = type
         self.contents = contents
         return self
 
     def id(self, id: int):
+        # 每当新用户连接时，发送给该用户
         return self.mkResponse(CType.ID, str(id))
 
-    def allUsers(self, usersdict: dict):
-        return self.mkResponse(CType.ALL_USERINFOS, json.dumps(usersdict))
+    def userInfos(self, usersdict: dict):
+        # 每当新用户连接时或有用户断开时，发送给所有用户
+        return self.mkResponse(CType.USERINFOS, json.dumps(usersdict))
 
-    def encode(self):
+    def pData(self, pData:PData):
+        return self.mkResponse(CType.PDATA, str(pData))
+
+    def __str__(self):
         data = []
-        data.append(self.type.value)
+        data.append(str(self.ctype))
         data.append(self.contents)
-        return SEP.join(data).encode(ENCODING)
+        return CSEP.join(data)
 
-    def decode(self, data: bytes):
-        type, self.contents = data.decode(ENCODING).split(SEP)
-        self.type = CType(int(type))
-        return self
+    def encode(self) -> bytes:
+        return str(self).encode(ENCODING)
+
+    @staticmethod
+    def decode(cdata: bytes):
+        type, contents = cdata.decode(ENCODING).split(CSEP)
+        type = CType(int(type))
+        return CResponse(type, contents)
+
+    def transToPData(self) -> PData:
+        return PData.decodeFromStr(self.contents)
 
     def transToId(self):
         return self.contents
