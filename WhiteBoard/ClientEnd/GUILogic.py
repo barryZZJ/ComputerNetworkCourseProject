@@ -1,8 +1,8 @@
 # @Author : ZZJ, CJY
 # GUI界面背后的处理逻辑，被GUI调用
 
-from WhiteBoard.ClientEnd.Conn import Conn
-from WhiteBoard.paintData import Ctrl, PType, SType, Point, PDataBrush, PDataShape, PDataText, PData
+from ClientEnd.ClientConn import ClientConn
+from WhiteBoard.paintData import Ctrl, PType, SType, PDataBrush, PDataShape, PDataText, PData
 
 
 # ----------------- 主界面相关 --------------------
@@ -32,7 +32,7 @@ def onExitHandler():
 # TODO eraser: find_overlapping函数，tag
 
 # TODO 待完善
-def onLocalDrawHandler(conn:Conn, pType: PType, color, *bodyArgs):
+def onLocalDrawHandler(conn:ClientConn, pType: PType, color, *bodyArgs):
     """本地在白板上发生了绘制动作，1.在canvas上渲染对应形状；2.生成对应数据发送给server
 
     if pType == BRUSH:

@@ -1,16 +1,18 @@
+import json
 from builtins import bytes
-from enum import Enum
-from typing import Tuple
+from enum import Enum, auto
 from types import DynamicClassAttribute
 
+#! 使用request - response模式，客户端发送请求，服务器返回相应
 
-encoding = 'utf8'
-sep = ' ' # 分隔符
+ENCODING = 'utf8'
+SEP = ';'
 
-class Type(Enum):
-    ID = 0 # 用户的ID
-    DISCONNECT = 1 # 断开连接
-    PDATA = 2 # 画图数据
+class CType(Enum):
+    ID = auto() # 用户的ID
+    ALL_USERINFOS = auto() # 所有用户
+    PDATA = auto() # 画图数据
+    DISCONNECT = auto() # 断开连接
 
     @DynamicClassAttribute
     def value(self):
@@ -18,19 +20,23 @@ class Type(Enum):
         return str(self._value_)
 
     def __bytes__(self):
-        return bytes(self.value, encoding)
+        return bytes(self.value, ENCODING)
 
 
-class pRequest:
+class PRequest:
     def __init__(self):
         self.type = None
 
     def id(self):
-        self.type = Type.ID
+        self.type = CType.ID
+        return self
+
+    def allUsers(self):
+        self.type = CType.ALL_USERINFOS
         return self
 
     def disconnect(self):
-        self.type = Type.DISCONNECT
+        self.type = CType.DISCONNECT
         return self
 
     def encode(self):
@@ -38,34 +44,44 @@ class pRequest:
         return data
 
     def decode(self, data: bytes):
-        type = data.decode(encoding)
-        self.type = Type(int(type))
+        type = data.decode(ENCODING)
+        self.type = CType(int(type))
         return self
 
 
-class pResponse:
+class PResponse:
     def __init__(self):
         self.type = None
-        self.content = None
+        self.contents = None
 
-    def respond(self, type: Type, content: str):
+    def mkResponse(self, type: CType, contents: str):
         self.type = type
-        self.content = content
+        self.contents = contents
         return self
 
-    def makeId(self, id: int):
-        return self.respond(Type.ID, str(id))
+    def id(self, id: int):
+        return self.mkResponse(CType.ID, str(id))
+
+    def allUsers(self, usersdict: dict):
+        return self.mkResponse(CType.ALL_USERINFOS, json.dumps(usersdict))
 
     def encode(self):
         data = []
         data.append(self.type.value)
-        data.append(self.content)
-        return sep.join(data).encode(encoding)
+        data.append(self.contents)
+        return SEP.join(data).encode(ENCODING)
 
     def decode(self, data: bytes):
-        type, self.content = data.decode(encoding).split(sep)
-        self.type = Type(int(type))
+        type, self.contents = data.decode(ENCODING).split(SEP)
+        self.type = CType(int(type))
         return self
+
+    def transToId(self):
+        return self.contents
+
+    def transToUserInfoDict(self) -> dict:
+        userinfos = json.loads(self.contents)
+        return userinfos
 
 if __name__ == '__main__':
 

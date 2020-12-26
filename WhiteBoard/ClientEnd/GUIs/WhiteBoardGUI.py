@@ -1,5 +1,6 @@
 import sys
 import os
+from threading import Thread
 from time import sleep
 
 from PyQt5.QtWidgets import QMainWindow, QApplication,  QLineEdit, QInputDialog, QColorDialog, QLabel, QAction, QMessageBox
@@ -19,11 +20,12 @@ PATHTOCOLOR = os.path.join(RESOURCES, "color.png")
 PATHTOWIDTH = os.path.join(RESOURCES, "changewidth.png")
 
 
-class WhiteBoard(QLabel):
+class WhiteBoardCanvas(QLabel):
 #TODO 窗体大小固定
 
     def __init__(self, parent):
-        super(WhiteBoard, self).__init__(parent)
+        QLabel.__init__(self, parent)
+
         self.whiteboard = QPixmap(797, 597)  # 考虑边框的间距 减去px
         self.whiteboard.fill(Qt.white)
         self.setStyleSheet("border: 2px solid white")
@@ -157,14 +159,14 @@ class WhiteBoard(QLabel):
 
 class WhiteBoardWindow(QMainWindow):
     def __init__(self):
-        super(WhiteBoardWindow, self).__init__()
+        QMainWindow.__init__(self)
         self.initUi()
 
     def initUi(self):
         self.resize(800, 600)
 
         # 设置画板
-        self.wb = WhiteBoard(self)
+        self.wb = WhiteBoardCanvas(self)
         self.wb.setGeometry(10, 50, 750, 501)
         # 橡皮
         eraser = QAction(QIcon(PATHTOERASER), "Eraser", self)
@@ -241,16 +243,25 @@ class WhiteBoardWindow(QMainWindow):
             else:
                 QMessageBox(self, "Error", "输入不能为空！")
 
+class WhiteBoardApp():
+    def __init__(self):
+        # Thread.__init__(self)
+        self.closed = False
+        self.app = None
 
+    def exit(self):
+        self.app.exit()
+        self.closed = True
 
-def startWhiteBoard():
-    app = QApplication([])
-    the_window = WhiteBoardWindow()
-    the_window.show()
-    app.exec_()
+    def show(self):
+        self.app = QApplication([])
+        window = WhiteBoardWindow()
+        window.show()
+        self.app.exec()
+
+    # def run(self):
+    #     self.show()
 
 
 if __name__ == '__main__':
-
-    startWhiteBoard()
-
+    WhiteBoardApp().show()
