@@ -1,7 +1,7 @@
 import socket
 
-from ClientEnd.GUIs import connect
-from controlData import PRequest, PResponse, CType
+from WhiteBoard.ClientEnd.GUIs import connect
+from WhiteBoard.controlData import CRequest
 
 BUFSIZE = 1024
 debug = False
@@ -42,27 +42,7 @@ class ClientConn(socket.socket):
         # 获取本机IP
         return self.getsockname()[0]
 
-    def getHostId(self) -> str:
-        # 获取本机ID，用于唯一标识一个主机
-        while self.isAlive:
-            data = PRequest().id().encode()
-            self.sendall(data)
-            data = self.recvCData()
-            pResp = PResponse().decode(data)
-            if pResp.type == CType.ID:
-                return pResp.transToId()
-            # 如果回复是其他类型，就丢弃，再次发送请求
 #TODO 连接断开时的处理
-    def getUserInfoDict(self) -> dict:
-        # 获取所有客户端ip和id。需要定期轮询
-        while self.isAlive:
-            data = PRequest().allUsers().encode()
-            self.sendall(data)
-            data = self.recvCData()
-            pResp = PResponse().decode(data)
-            if pResp.type == CType.ALL_USERINFOS:
-                return pResp.transToUserInfoDict()
-            # 如果回复是其他类型，就丢弃，再次发送请求
 
     def tryConnect(self) -> bool:
         """连接服务器，返回是否成功"""
@@ -74,18 +54,10 @@ class ClientConn(socket.socket):
         return True
 
     def disconnect(self):
-        self.sendall(PRequest().disconnect().encode())
+        self.sendall(CRequest().disconnect().encode())
         self.close()
         self.isAlive = False
 
-    def sendCData(self, data) -> bool:
-        """发送数据，返回发送是否成功"""
-        # TODO socket.send错误处理
-        # TODO 怎么发送bit位
-        # TODO 传输字典可以用json字符串
-        # TODO 把字符串编码成bytes再发送："xxx".encode()，默认UTF8编码
-        pass
+    def recvCDataBytes(self):
+        return self.recv(BUFSIZE)
 
-    def recvCData(self) -> bytes:
-        cdata = self.recv(BUFSIZE)
-        return cdata

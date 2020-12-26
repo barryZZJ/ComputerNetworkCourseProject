@@ -1,13 +1,13 @@
-import sys
 import os
-from threading import Thread
 from time import sleep
 
 from PyQt5.QtWidgets import QMainWindow, QApplication,  QLineEdit, QInputDialog, QColorDialog, QLabel, QAction, QMessageBox
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QColor, QBrush, QFont, QMouseEvent
-from PyQt5.QtCore import Qt, QRect, QCoreApplication
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QMouseEvent
+from PyQt5.QtCore import Qt
 
-from WhiteBoard.paintData import PData, PDataBrush, PDataShape, PDataEraser, Ctrl, PType, SType
+from WhiteBoard.ClientEnd.ClientConn import ClientConn
+from WhiteBoard.paintData import PData, PType, SType
+from WhiteBoard.controlData import CRequest
 
 RESOURCES = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources")
 PATHTOTEXT = os.path.join(RESOURCES, "text.png")
@@ -23,9 +23,9 @@ PATHTOWIDTH = os.path.join(RESOURCES, "changewidth.png")
 class WhiteBoardCanvas(QLabel):
 #TODO 窗体大小固定
 
-    def __init__(self, parent):
+    def __init__(self, parent, conn: ClientConn):
         QLabel.__init__(self, parent)
-
+        self.conn=conn
         self.whiteboard = QPixmap(797, 597)  # 考虑边框的间距 减去px
         self.whiteboard.fill(Qt.white)
         self.setStyleSheet("border: 2px solid white")
@@ -37,9 +37,11 @@ class WhiteBoardCanvas(QLabel):
         self.y2 = 0 # 坐标
         self.text = ""  # 记录输入的文字
         self.width = 4  # pen width
-        self.pData = PData(Ctrl.NOOP, PType.BRUSH, self.foreColor)
+        self.pData = PData(PType.BRUSH, self.foreColor)
+        self.serverMsg: PData
         self.isMouseDown = False
         self.isMouseUp = not self.isMouseDown
+        self.isPaintFromMsg = False
 
 # 切换绘制类型
     def setToDot(self):
@@ -75,47 +77,107 @@ class WhiteBoardCanvas(QLabel):
 
     def paintEvent(self, event):
         painter = QPainter(self.whiteboard)
-        if self.pData.isEraser():
-            painter.setPen(QPen(self.backColor, self.width, Qt.SolidLine))
-        else:
-            painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
-
-        print(self.x1, self.y1, self.x2, self.y2)
-        #这里需要接受服务器的图形添加在客户端
-
-        if (self.pData.isBrush() or self.pData.isEraser()) and self.isMouseDown:
-            # 笔刷画点、橡皮，使用同一种画法
-            if self.pData.isBrush():
-                self.pData.updateArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
-                print("draw dot")
+        if not self.isPaintFromMsg:
+            # 本地作画行为
+            if self.pData.isEraser():
+                painter.setPen(QPen(self.backColor, self.width, Qt.SolidLine))
             else:
-                self.pData.updateArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
-                print("draw eraser")
-            painter.drawLine(self.x1, self.y1, self.x2, self.y2)
+                painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
 
-        elif self.pData.isLine() and self.isMouseUp:
-            # 画直线
-            print("draw line")
-            self.pData.updateArgs(SType.LINE, (self.x1, self.y1), (self.x2, self.y2), self.width)
-            painter.drawLine(self.x1, self.y1, self.x2, self.y2)
+            print(self.x1, self.y1, self.x2, self.y2)
+            #这里需要接受服务器的图形添加在客户端
 
-        elif self.pData.isCircle() and self.isMouseUp:
-            # 画圆
-            print("draw circle")
-            self.pData.updateArgs(SType.CIRCLE, (self.x1, self.y1), (self.x2, self.y2), self.width)
-            painter.drawEllipse(self.x1, self.y1, self.x2 - self.x1, self.y2 - self.y1)
+            if (self.pData.isBrush() or self.pData.isEraser()) and self.isMouseDown:
+                # 笔刷画点、橡皮，使用同一种画法
+                if self.pData.isBrush():
+                    self.pData.updateArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
+                    print("draw dot local")
+                else:
+                    self.pData.updateArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
+                    print("draw eraser local")
+                painter.drawLine(self.x1, self.y1, self.x2, self.y2)
 
-        elif self.pData.isRect() and self.isMouseUp:
-            # 画矩形
-            print("draw rec")
-            self.pData.updateArgs(SType.RECT, (self.x1, self.y1), (self.x2, self.y2), self.width)
-            painter.drawRect(self.x1, self.y1, self.x2 - self.x1, self.y2 - self.y1)
+            elif self.pData.isLine() and self.isMouseUp:
+                # 画直线
+                print("draw line local")
+                self.pData.updateArgs(SType.LINE, (self.x1, self.y1), (self.x2, self.y2), self.width)
+                painter.drawLine(self.x1, self.y1, self.x2, self.y2)
 
-        elif self.pData.isText() and self.text != "" and self.isMouseDown:
-            # 画文字
-            print("draw text")
-            self.pData.updateArgs(self.text, (self.x1, self.y1))
-            painter.drawText(self.x1, self.y1,self.text)
+            elif self.pData.isCircle() and self.isMouseUp:
+                # 画圆
+                print("draw circle local")
+                self.pData.updateArgs(SType.CIRCLE, (self.x1, self.y1), (self.x2, self.y2), self.width)
+                painter.drawEllipse(self.x1, self.y1, self.x2 - self.x1, self.y2 - self.y1)
+
+            elif self.pData.isRect() and self.isMouseUp:
+                # 画矩形
+                print("draw rec local")
+                self.pData.updateArgs(SType.RECT, (self.x1, self.y1), (self.x2, self.y2), self.width)
+                painter.drawRect(self.x1, self.y1, self.x2 - self.x1, self.y2 - self.y1)
+
+            elif self.pData.isText() and self.text != "" and self.isMouseDown:
+                # 画文字
+                print("draw text local")
+                self.pData.updateArgs(self.text, (self.x1, self.y1))
+                painter.drawText(self.x1, self.y1,self.text)
+            self.isPaintFromMsg = False
+        else:
+            # 根据远程信息作画
+            if self.serverMsg.isEraser():
+                painter.setPen(QPen(self.backColor, self.serverMsg.body.width, Qt.SolidLine))
+            elif self.serverMsg.isText():
+                # 需要width参数，但画文字用不到，就设成本地的好了
+                painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
+            else:
+                painter.setPen(QPen(self.foreColor, self.serverMsg.body.width, Qt.SolidLine))
+
+
+            if self.serverMsg.isBrush() or self.serverMsg.isEraser():
+                # 笔刷画点、橡皮，使用同一种画法
+                if self.serverMsg.isBrush():
+                    print("draw dot remote")
+                else:
+                    print("draw eraser remote")
+                x1 = self.serverMsg.body.st[0]
+                y1 = self.serverMsg.body.st[1]
+                x2 = self.serverMsg.body.ed[0]
+                y2 = self.serverMsg.body.ed[1]
+                painter.drawLine(x1, y1, x2, y2)
+
+            elif self.serverMsg.isLine():
+                # 画直线
+                print("draw line remote")
+                x1 = self.serverMsg.body.st[0]
+                y1 = self.serverMsg.body.st[1]
+                x2 = self.serverMsg.body.ed[0]
+                y2 = self.serverMsg.body.ed[1]
+                painter.drawLine(x1, y1, x2, y2)
+
+            elif self.serverMsg.isCircle():
+                # 画圆
+                print("draw circle remote")
+                x1 = self.serverMsg.body.st[0]
+                y1 = self.serverMsg.body.st[1]
+                x2 = self.serverMsg.body.ed[0]
+                y2 = self.serverMsg.body.ed[1]
+                painter.drawEllipse(x1, y1, x2 - x1, y2 - y1)
+
+            elif self.serverMsg.isRect():
+                # 画矩形
+                print("draw rec remote")
+                x1 = self.serverMsg.body.st[0]
+                y1 = self.serverMsg.body.st[1]
+                x2 = self.serverMsg.body.ed[0]
+                y2 = self.serverMsg.body.ed[1]
+                painter.drawRect(x1, y1, x2 - x1, y2 - y1)
+
+            elif self.serverMsg.isText():
+                # 画文字
+                print("draw text remote")
+                x1 = self.serverMsg.body.pos[0]
+                y1 = self.serverMsg.body.pos[1]
+                painter.drawText(x1, y1, self.serverMsg.body.content)
+            self.isPaintFromMsg = False
 
         Label_painter = QPainter(self)
         Label_painter.drawPixmap(2, 2, self.whiteboard)
@@ -156,17 +218,24 @@ class WhiteBoardCanvas(QLabel):
             self.isMouseUp = not self.isMouseDown
             self.update()
 
+    def sendCData(self):
+        self.conn.sendall(CRequest().pData(self.pData).encode())
+
+    def paintFromMsg(self, pData: PData):
+        self.isPaintFromMsg = True
+        self.serverMsg = pData
+        self.update()
 
 class WhiteBoardWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, conn: ClientConn):
         QMainWindow.__init__(self)
+        self.wb = WhiteBoardCanvas(self, conn)
         self.initUi()
 
     def initUi(self):
         self.resize(800, 600)
 
         # 设置画板
-        self.wb = WhiteBoardCanvas(self)
         self.wb.setGeometry(10, 50, 750, 501)
         # 橡皮
         eraser = QAction(QIcon(PATHTOERASER), "Eraser", self)
@@ -243,25 +312,18 @@ class WhiteBoardWindow(QMainWindow):
             else:
                 QMessageBox(self, "Error", "输入不能为空！")
 
-class WhiteBoardApp():
-    def __init__(self):
-        # Thread.__init__(self)
+class WhiteBoardApp(WhiteBoardWindow):
+    def __init__(self, conn: ClientConn):
+        self.app = QApplication([])
+        WhiteBoardWindow.__init__(self, conn)
         self.closed = False
-        self.app = None
+
 
     def exit(self):
         self.app.exit()
         self.closed = True
 
-    def show(self):
-        self.app = QApplication([])
-        window = WhiteBoardWindow()
-        window.show()
+    def showBoard(self):
+        self.show()
         self.app.exec()
 
-    # def run(self):
-    #     self.show()
-
-
-if __name__ == '__main__':
-    WhiteBoardApp().show()
