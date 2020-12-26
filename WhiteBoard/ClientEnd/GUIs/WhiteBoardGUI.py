@@ -39,9 +39,6 @@ class WhiteBoard(QLabel):
         self.isMouseDown = False
         self.isMouseUp = not self.isMouseDown
 
-# TODO 图形预览，文本框预览
-
-
 # 切换绘制类型
     def setToDot(self):
         print('set to brush')
@@ -117,7 +114,6 @@ class WhiteBoard(QLabel):
             self.pData.updateArgs(self.text, (self.x1, self.y1))
             painter.drawText(self.x1, self.y1,self.text)
 
-        #TODO
         Label_painter = QPainter(self)
         Label_painter.drawPixmap(2, 2, self.pixmap)
 
@@ -143,8 +139,6 @@ class WhiteBoard(QLabel):
             self.x2 = event.x()
             self.y2 = event.y()
             self.update()
-        #TODO 其他图形的预览在这写
-
 
     def mouseReleaseEvent(self, event):
         #鼠标弹起
@@ -209,7 +203,7 @@ class WhiteBoardWindow(QMainWindow):
         self.menubar.addAction(changeWidth)
         # 主页面
         self.setWindowTitle("Drawing Board")
-#TODO
+
         eraser.triggered.connect(self.wb.setToEraser)
         color.triggered.connect(self.chooseColor)
         pen.triggered.connect(self.wb.setToDot)
@@ -219,18 +213,13 @@ class WhiteBoardWindow(QMainWindow):
         Text.triggered.connect(self.trySetToText)
         changeWidth.triggered.connect(self.changeWidth)
 
-        #TODO 默认点一下笔刷
+        #默认点一下笔刷
+        pen.trigger()
 
     def chooseColor(self):
         Color = QColorDialog.getColor()  # color是Qcolor
         if Color.isValid():
             self.wb.foreColor = Color
-
-    def erase(self):
-        self.clearTheSign()
-        self.wb.isDrawDot = 1
-        self.wb.color = Qt.white
-        self.wb.width = self.wb.width
 
     def changeWidth(self):
         width, okPressed = QInputDialog.getInt(self, '选择画笔粗细', '请输入粗细：', min=1, step=1)
