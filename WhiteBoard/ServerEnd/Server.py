@@ -4,7 +4,6 @@
 #TODO 考虑需不需要把收到的形状存在列表里；重做时server传什么内容（重做信号还是需要重做的形状信息）
 #TODO 可以给每个object一个标号，删除的时候通过标号判断
 import sys, os
-
 module_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(module_path)        # 导入的绝对路径
 import socket
@@ -15,6 +14,7 @@ from WhiteBoard.controlData import pRequest, pResponse, Type
 # TODO 用分配一个id识别不同主机，用于转发时的识别，客户端发现 昵称/id 与自己相同则不画。
 
 # 全局变量
+BUFSIZE = 1024
 # 存客户端线程实例
 clients = []
 # 存服务器的数据，用于图像的复现
@@ -22,6 +22,8 @@ Logs = {}
 
 class Server:
     """连接客户端的类，封装socket"""
+    nextUserId = 1  # 为用户分配id
+    lock = Lock()
 
     def __init__(self, host='127.0.0.1', port=5000):
         self.host = host
@@ -30,8 +32,6 @@ class Server:
             print(f"invalid server address {self.host}:{self.port}")
             return
 
-        self.nextUserId = 0 # 为用户分配id
-        self.lock = Lock()
         self.initSocket()
         self.serveForever()
 
@@ -49,64 +49,67 @@ class Server:
             # 新建一个处理该连接的线程
             Thread(target=self.handle, args=[conn, addr]).start()
 
-    def handle(self, conn: socket.socket, addr):
-        # 处理一个连接
-        exitFlag = False
-        with conn:
-            print('connected by', addr)
-            while not exitFlag:
 
-                newCl = ClientObj(conn, self.nextUserId)
-                clients.append(newCl)
-                # newCl.start()
+    def handle(self, conn: socket.socket, ipAddr):
+        # 处理一个连接，即新建一个Client对象线程
 
+        print('connected by', ipAddr)
+        newCl = ClientObj(conn, self.nextUserId, ipAddr)
+        clients.append(newCl)
+        newCl.start()
 
-                data = conn.recv(1024) # 阻塞，收到数据后唤醒
-                pReq = pRequest().decode(data)
-                print("receive from", addr, "-", pReq.type)
-                if pReq.type == Type.ID:
-                    conn.sendall(pResponse().makeId(self.nextUserId).encode())
-                    print("respond to", addr, "-", pReq.type, ":", self.nextUserId)
-                    self.mutexIncUserId()
-                elif pReq.type == Type.DISCONNECT:
-                    exitFlag = True
-
-        # 连接关闭
-        print("connection closed")
-        self.mutexDecUserId()
-
-    def mutexIncUserId(self):
+    @classmethod
+    def mutexIncUserId(cls):
         # 互斥修改nextUserId
-        self.lock.acquire()
-        self.nextUserId += 1
-        self.lock.release()
+        cls.lock.acquire()
+        cls.nextUserId += 1
+        cls.lock.release()
 
-    def mutexDecUserId(self):
+    @classmethod
+    def mutexDecUserId(cls):
         # 互斥修改nextUserId
-        self.lock.acquire()
-        self.nextUserId -= 1
-        self.lock.release()
+        cls.lock.acquire()
+        cls.nextUserId -= 1
+        cls.lock.release()
 
 class ClientObj(Thread):
     # 为每个连接的客户端创建一个线程实例，用于并行处理所有客户端发来的消息
-    def __init__(self, conn: socket.socket, id):
+    def __init__(self, conn: socket.socket, id, ipAddr):
         super().__init__()
         self.conn = conn
         self.id = id
-        self.running = True
+        self.alive = True
+        self.ipAddr = ipAddr
 
-    def terminate(self):
-        self.running = False
+    def handleCtrlRequest(self, pReq: pRequest):
+        print("receive from", self.ipAddr, "-", pReq.type)
+        if pReq.type == Type.ID:
+            self.handleIDRequest()
+        elif pReq.type == Type.DISCONNECT:
+            self.handleDisconnRequest()
 
-    def handleCtrlData(self, pResponse: pResponse):
-        pass
+    def handleIDRequest(self):
+        self.conn.sendall(pResponse().makeId(self.id).encode())
+        print("respose -", self.id)
+        Server.mutexIncUserId()
+
+    def handleDisconnRequest(self):
+        # 连接关闭
+        self.conn.close()
+        self.alive = False
+        print("connection closed")
+        Server.mutexDecUserId()
+
 
     def run(self):
-        # while self.running:
-        #     try:
-        #         cdata = self.conn.recv(1024)  # 阻塞，收到数据后唤醒
-        #         self.handleCtrlData(pResponse.decode(cdata))
-        pass
+        while self.alive:
+            try:
+                cdata = self.conn.recv(BUFSIZE)  # 阻塞，收到数据后唤醒
+                self.handleCtrlRequest(pRequest().decode(cdata))
+            except ConnectionResetError:
+                pass
+            except ConnectionAbortedError:
+                pass
 
 if __name__ == '__main__':
     Server()

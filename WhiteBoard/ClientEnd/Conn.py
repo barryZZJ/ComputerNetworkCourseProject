@@ -1,7 +1,9 @@
 import socket
-from WhiteBoard.PaintData import PData
+from WhiteBoard.paintData import PData
 from WhiteBoard.ClientEnd.GUIs import connect
 from WhiteBoard.controlData import pRequest, pResponse, Type
+
+BUFSIZE = 1024
 
 debug = False
 
@@ -44,7 +46,7 @@ class Conn:
         # 获取本机ID，用于唯一标识一个主机
         data = pRequest().id().encode()
         self.s.sendall(data)
-        data = self.s.recv(1024)
+        data = self.s.recv(BUFSIZE)
         pResp = pResponse().decode(data)
         if pResp.type == Type.ID:
             return pResp.content
@@ -74,7 +76,7 @@ class Conn:
 
     def recvData(self) -> PData:
         """接受数据，返回收到的对象"""
-        data = self.s.recv(1024)
+        data = self.s.recv(BUFSIZE)
         pResp = pResponse().decode(data)
         pass
 

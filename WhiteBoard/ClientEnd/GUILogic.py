@@ -2,7 +2,7 @@
 # GUI界面背后的处理逻辑，被GUI调用
 
 from WhiteBoard.ClientEnd.Conn import Conn
-from WhiteBoard.PaintData import Ctrl, PType, SType, Point, PDataBrush, PDataShape, PDataText, PData
+from WhiteBoard.paintData import Ctrl, PType, SType, Point, PDataBrush, PDataShape, PDataText, PData
 
 
 # ----------------- 主界面相关 --------------------
