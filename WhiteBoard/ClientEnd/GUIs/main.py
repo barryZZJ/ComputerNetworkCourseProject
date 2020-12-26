@@ -2,12 +2,14 @@ from threading import Thread
 from time import sleep
 from tkinter import *
 
+from PyQt5.QtWidgets import QLabel, QApplication, QMainWindow
+
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
-from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardApp
+from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardApp, WhiteBoardWindow
 from WhiteBoard.controlData import PResponse, CType
 
 
-class Main(Tk):
+class Main(QMainWindow):
     _title = "Main"
     _size = '350x350'
     _font = ('Consolas', 11)
@@ -76,8 +78,15 @@ class Main(Tk):
         self.allUserInfosVar.set(l)
         self.after(self.conn._poll_all_users_interval, self.pollAllUsers)
 
+    def show(self):
+        self.app = QApplication([])
+        window = Main(self.conn)
+        window.show()
+        self.app.exec()
 
 if __name__ == '__main__':
-    Main(None)
+
+    Main(None).show()
+    #Main(None)
 
 
