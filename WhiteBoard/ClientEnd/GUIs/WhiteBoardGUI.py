@@ -74,11 +74,13 @@ class mylable(QLabel):
         if self.isDrawStraightline and self.drawStraightline:
             # print("painter.drawLine(",self.straightlineXBegin, self.straightlineYBegin, self.straightlineXEnd, self.straightlineYEnd,")")
             painter.drawLine(self.straightlineXBegin, self.straightlineYBegin, self.straightlineXEnd, self.straightlineYEnd)
+            #self.repaint()
             self.drawStraightline = 0
 
         elif self.isDrawLine and self.drawLine:
             print("painter.drawLine(",self.x0, self.y0, self.x1, self.y1,")")
             painter.drawLine(self.x0, self.y0, self.x1, self.y1)
+            #painter.drawPoint(self.x0, self.y0)
             self.drawLine = 0
 
         elif self.isDrawCircle and self.drawCircle:
@@ -86,7 +88,9 @@ class mylable(QLabel):
             self.drawCircle = 0
 
         elif self.isDrawRec and self.drawRec:
-            painter.drawRect(self.straightlineXBegin, self.straightlineYBegin, self.straightlineXEnd - self.straightlineXBegin, self.straightlineYEnd - self.straightlineYBegin)
+            Q = QRect(self.straightlineXBegin, self.straightlineYBegin, self.straightlineXEnd - self.straightlineXBegin, self.straightlineYEnd - self.straightlineYBegin)
+            #painter.drawRect(Q)
+            painter.eraseRect(Q)
             self.drawRec = 0
 
         elif self.isDrawText and self.drawText:
@@ -114,6 +118,7 @@ class mylable(QLabel):
     def mouseMoveEvent(self, event):
 
         if self.flag and self.shape == 1:
+
             self.drawLine = 1
             self.x0 = self.x1
             self.y0 = self.y1
@@ -278,5 +283,7 @@ def main():
 if __name__ == '__main__':
     app = QApplication([])
     the_window = WhiteBoard()
+    #the_window2 = WhiteBoard()
     the_window.show()
+    #the_window2.show()
     app.exec_()
