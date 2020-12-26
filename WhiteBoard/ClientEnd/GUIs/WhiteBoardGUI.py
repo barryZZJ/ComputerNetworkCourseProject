@@ -24,17 +24,17 @@ class WhiteBoard(QLabel):
 
     def __init__(self, parent):
         super(WhiteBoard, self).__init__(parent)
-        self.pixmap = QPixmap(797, 597)  # 考虑边框的间距 减去px
-        self.pixmap.fill(Qt.white)
+        self.whiteboard = QPixmap(797, 597)  # 考虑边框的间距 减去px
+        self.whiteboard.fill(Qt.white)
         self.setStyleSheet("border: 2px solid white")
         self.foreColor = Qt.black  # pen color
-        self.backColor = Qt.white
-        self.x1 = 0
-        self.y1 = 0
-        self.x2 = 0
-        self.y2 = 0
-        self.text = ""  # 这个是记录输入的文字
-        self.width = 4  # pen width : default:4
+        self.backColor = Qt.white  # eraser color
+        self.x1 = 0 # 坐标
+        self.y1 = 0 # 坐标
+        self.x2 = 0 # 坐标
+        self.y2 = 0 # 坐标
+        self.text = ""  # 记录输入的文字
+        self.width = 4  # pen width
         self.pData = PData(Ctrl.NOOP, PType.BRUSH, self.foreColor)
         self.isMouseDown = False
         self.isMouseUp = not self.isMouseDown
@@ -72,7 +72,7 @@ class WhiteBoard(QLabel):
         self.pData.setToEraser()
 
     def paintEvent(self, event):
-        painter = QPainter(self.pixmap)
+        painter = QPainter(self.whiteboard)
         if self.pData.isEraser():
             painter.setPen(QPen(self.backColor, self.width, Qt.SolidLine))
         else:
@@ -116,7 +116,7 @@ class WhiteBoard(QLabel):
             painter.drawText(self.x1, self.y1,self.text)
 
         Label_painter = QPainter(self)
-        Label_painter.drawPixmap(2, 2, self.pixmap)
+        Label_painter.drawPixmap(2, 2, self.whiteboard)
 
     def mousePressEvent(self, event: QMouseEvent):
         # 鼠标按下
