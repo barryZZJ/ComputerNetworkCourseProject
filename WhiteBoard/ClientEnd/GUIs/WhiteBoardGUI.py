@@ -131,6 +131,7 @@ class WhiteBoard(QLabel):
 
 
     def mouseMoveEvent(self, event):
+
         if self.isMouseDown and self.pData.isBrush():
             # 刷子事件需要更新鼠标平移的情况
             sleep(0.0001)
@@ -138,6 +139,7 @@ class WhiteBoard(QLabel):
             self.y1 = self.y2
             self.x2 = event.x()
             self.y2 = event.y()
+
             self.update()
 
     def mouseReleaseEvent(self, event):
@@ -249,4 +251,6 @@ def startWhiteBoard():
 
 
 if __name__ == '__main__':
+
     startWhiteBoard()
+
