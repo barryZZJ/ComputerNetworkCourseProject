@@ -2,8 +2,9 @@ import os
 from time import sleep
 
 from PyQt5.QtWidgets import QMainWindow, QApplication,  QLineEdit, QInputDialog, QColorDialog, QLabel, QAction, QMessageBox
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QMouseEvent
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QMouseEvent, QCursor
 from PyQt5.QtCore import Qt
+
 
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
 from WhiteBoard.paintData import PData, PType, SType
@@ -21,7 +22,6 @@ PATHTOWIDTH = os.path.join(RESOURCES, "changewidth.png")
 
 
 class WhiteBoardCanvas(QLabel):
-#TODO 窗体大小固定
 
     def __init__(self, parent, conn: ClientConn):
         QLabel.__init__(self, parent)
@@ -70,9 +70,11 @@ class WhiteBoardCanvas(QLabel):
         self.pData.setToText()
 
     def setToEraser(self):
-        #TODO 自定义鼠标形状（png）
+        # 自定义鼠标形状（png）
         print("set to eraser")
-        self.setCursor(Qt.CrossCursor)
+        myPixmp = QPixmap(PATHTOERASER).scaled(30,30)
+        myCursor = QCursor(myPixmp)
+        self.setCursor(myCursor)
         self.pData.setToEraser()
 
     def paintEvent(self, event):
@@ -120,6 +122,7 @@ class WhiteBoardCanvas(QLabel):
                 print("draw text local")
                 self.pData.updateArgs(self.text, (self.x1, self.y1))
                 painter.drawText(self.x1, self.y1,self.text)
+            self.sendCData()
             self.isPaintFromMsg = False
         else:
             # 根据远程信息作画
@@ -233,7 +236,8 @@ class WhiteBoardWindow(QMainWindow):
         self.initUi()
 
     def initUi(self):
-        self.resize(800, 600)
+        self.resize(770, 570)
+        self.setFixedSize(770, 570)
 
         # 设置画板
         self.wb.setGeometry(10, 50, 750, 501)
