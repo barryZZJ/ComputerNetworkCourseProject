@@ -10,7 +10,7 @@ sep = ' ' # 分隔符
 class Type(Enum):
     ID = 0 # 用户的ID
     DISCONNECT = 1 # 断开连接
-    PDATA = 2 #
+    PDATA = 2 # 画图数据
 
     @DynamicClassAttribute
     def value(self):

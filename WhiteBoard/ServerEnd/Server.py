@@ -45,18 +45,12 @@ class Server:
     # 用多线程以支持多个连接
     def serveForever(self):
         while True:
-            conn, addr = self.s.accept() # 阻塞，收到连接后唤醒
-            # 新建一个处理该连接的线程
-            Thread(target=self.handle, args=[conn, addr]).start()
-
-
-    def handle(self, conn: socket.socket, ipAddr):
-        # 处理一个连接，即新建一个Client对象线程
-
-        print('connected by', ipAddr)
-        newCl = ClientObj(conn, self.nextUserId, ipAddr)
-        clients.append(newCl)
-        newCl.start()
+            conn, addr = self.s.accept() # 阻塞，每收到一个连接就唤醒
+            # 新建一个处理该连接的ClientObj线程
+            print('connected by', addr)
+            newCl = ClientObj(conn, self.nextUserId, addr)
+            clients.append(newCl)
+            newCl.start()
 
     @classmethod
     def mutexIncUserId(cls):

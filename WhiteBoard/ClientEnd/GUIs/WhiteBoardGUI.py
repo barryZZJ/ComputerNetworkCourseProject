@@ -80,6 +80,7 @@ class WhiteBoard(QLabel):
 
         print(self.x1, self.y1, self.x2, self.y2)
         #这里需要接受服务器的图形添加在客户端
+
         if (self.pData.isBrush() or self.pData.isEraser()) and self.isMouseDown:
             # 笔刷画点、橡皮，使用同一种画法
             if self.pData.isBrush():
@@ -119,7 +120,6 @@ class WhiteBoard(QLabel):
 
     def mousePressEvent(self, event: QMouseEvent):
         # 鼠标按下
-
         if event.button() == Qt.LeftButton:
             print("mouse pressed")
             self.x1 = event.x()
@@ -133,7 +133,7 @@ class WhiteBoard(QLabel):
     def mouseMoveEvent(self, event):
         if self.isMouseDown and self.pData.isBrush():
             # 刷子事件需要更新鼠标平移的情况
-            sleep(0.001)
+            sleep(0.0001)
             self.x1 = self.x2
             self.y1 = self.y2
             self.x2 = event.x()
@@ -163,7 +163,7 @@ class WhiteBoardWindow(QMainWindow):
 
         # 设置画板
         self.wb = WhiteBoard(self)
-        self.wb.setGeometry(10, 10, 750, 501)
+        self.wb.setGeometry(10, 50, 750, 501)
         # 橡皮
         eraser = QAction(QIcon(PATHTOERASER), "Eraser", self)
         eraser.setToolTip("Eraser")
@@ -192,7 +192,7 @@ class WhiteBoardWindow(QMainWindow):
 
         #工具栏
         self.menubar = self.addToolBar("ToolBar")
-
+        self.menubar.setMovable(False)
         self.menubar.addAction(eraser)
         self.menubar.addAction(color)
         self.menubar.addAction(pen)
