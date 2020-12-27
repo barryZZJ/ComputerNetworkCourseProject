@@ -80,10 +80,10 @@ class ConnectWindow(QMainWindow):
             self.tPort.setFocus()
             return
         # 都合法，尝试连接
-        while not self.conn.isAlive:
-            self.conn.initConn(self.serverIp, self.serverPorti)
-            if not self.conn.isAlive:
-                self.connectFailedHint()
+        self.conn.initConn(self.serverIp, self.serverPorti)
+        if not self.conn.isAlive:
+            self.connectFailedHint()
+            return
         # 连接成功，关闭连接窗体
         self.close()
 
