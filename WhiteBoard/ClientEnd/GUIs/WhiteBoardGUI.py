@@ -82,7 +82,7 @@ class WhiteBoardCanvas(QLabel):
         self.pData.setToEraser()
 #TODO 橡皮、文本框失灵
 #TODO 加一个清屏
-#TODO 颜色改变时最后一个图形的颜色也变了。
+#TODO 颜色改变时最后一个图形的颜色也变了。（修改setPen的时机)
     def paintEvent(self, event: QPaintEvent):
         painter = QPainter(self.whiteboard)
         if not self.isPaintFromMsg:
