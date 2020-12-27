@@ -145,6 +145,10 @@ class WhiteBoardCanvas(QLabel):
                 painter.drawText(self.x1, self.y1,self.text)
                 if self.conn:
                     self.sendCReq()
+            #TODO 清屏相关
+            # elif 清屏:
+            #     if self.conn:
+            #         self.sendCReq(PData(PType.CLS, self.foreColor, self.backColor))
 
             self.isPaintFromMsg = False
         else:
@@ -207,6 +211,11 @@ class WhiteBoardCanvas(QLabel):
                     x1 = self.serverMsg.body.pos[0]
                     y1 = self.serverMsg.body.pos[1]
                     painter.drawText(x1, y1, self.serverMsg.body.content)
+                # TODO 清屏相关
+                elif self.serverMsg.isCls():
+                    # 清屏
+                    pass
+
                 self.isPaintFromMsg = False
             except Exception as e:
                 print(e)
@@ -249,8 +258,11 @@ class WhiteBoardCanvas(QLabel):
             self.doPaint()
             self.update()
 
-    def sendCReq(self):
-        cReq = CRequest.pData(self.pData)
+    def sendCReq(self, pData=None):
+        if pData:
+            cReq = CRequest.pData(pData)
+        else:
+            cReq = CRequest.pData(self.pData)
         self.conn.sendCReq(cReq)
         if not self.conn.isAlive:
             return
