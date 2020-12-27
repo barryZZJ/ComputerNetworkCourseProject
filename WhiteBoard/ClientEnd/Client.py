@@ -1,12 +1,17 @@
 # @Author : ZZJ
 import sys, os
 from threading import Thread
+
+
+
 module_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(module_path)        # 导入的绝对路径
 from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardApp
 from WhiteBoard.controlData import CResponse, CType
-from WhiteBoard.ClientEnd.GUIs.main import Main
+
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
+from WhiteBoard.ClientEnd.GUIs.main import Main
+
 
 class Client(Thread, WhiteBoardApp):
     """客户端逻辑，调用GUI模块，显示界面"""
@@ -28,7 +33,11 @@ class Client(Thread, WhiteBoardApp):
     def run(self):
         print("running thread")
         while self.conn.isAlive:
-            cdata = self.conn.recvCDataBytes()
+            try:
+                cdata = self.conn.recvCDataBytes()
+            except OSError:
+                # 关闭socket连接后阻塞中的recv会触发OSError
+                break
             print("receive", cdata)
             cResp = CResponse.decode(cdata)
             if cResp.ctype == CType.USERINFOS:
@@ -39,9 +48,10 @@ class Client(Thread, WhiteBoardApp):
                         l.append(f"{ip} - {id} (me)")
                     else:
                         l.append(f"{ip} - {id}")
+                print("l",l)
                 self.main.allUserInfos = l
-                self.main.allUserInfosVar.set(l)
-            elif cResp.ctypeype == CType.PDATA:
+                self.main.setListBox(l)
+            elif cResp.ctype == CType.PDATA:
                 pData = cResp.transToPData()
                 self.wb.paintFromMsg(pData)
 
@@ -50,6 +60,7 @@ if __name__ == '__main__':
     cl.start()
 
     cl.main.showWindow()
+    cl.conn.disconnect()
     print("waiting thread")
 
     cl.join()

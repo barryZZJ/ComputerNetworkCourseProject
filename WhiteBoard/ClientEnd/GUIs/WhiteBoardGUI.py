@@ -89,7 +89,6 @@ class WhiteBoardCanvas(QLabel):
                 painter.setPen(QPen(self.backColor, self.width, Qt.SolidLine))
             else:
                 painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
-            print(event.type())
             #这里需要接受服务器的图形添加在客户端
             if (self.pData.isBrush() or self.pData.isEraser()) and self.isMouseDown:
                 print(self.pData.isEraser())

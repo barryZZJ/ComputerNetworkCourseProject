@@ -50,6 +50,7 @@ class ClientConn(socket.socket):
 
     def disconnect(self):
         self.sendall(CRequest().disconnect().encode())
+        self.shutdown(socket.SHUT_RDWR)
         self.close()
         self.isAlive = False
 

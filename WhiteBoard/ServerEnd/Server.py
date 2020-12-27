@@ -128,7 +128,9 @@ class User(Thread):
         while self.alive:
             try:
                 cdata = self.conn.recv(BUFSIZE)  # 阻塞，收到数据后唤醒
-                self.handleCtrlRequest(CRequest.decode(cdata))
+                print("receive", cdata)
+                if cdata != b'':
+                    self.handleCtrlRequest(CRequest.decode(cdata))
             except ConnectionError:
                 self.handleDisconnRequest()
 
