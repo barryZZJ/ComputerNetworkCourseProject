@@ -56,6 +56,8 @@ class Main(QMainWindow):
         self.button1.setToolTip("按钮说明")
         self.listwidget = QListWidget()
         self.listwidget.clear()
+
+
         print(self.allUserInfos)
         for i in range(0,len(self.allUserInfos)):
             self.listwidget.insertItem(i, self.allUserInfos[i])
