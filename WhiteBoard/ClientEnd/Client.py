@@ -48,9 +48,7 @@ class Client(Thread, WhiteBoardApp):
                         l.append(f"{ip} - {id} (me)")
                     else:
                         l.append(f"{ip} - {id}")
-                print("l",l)
-                self.main.allUserInfos = l
-                self.main.setListBox(l)
+                self.main.setUserInfos(l)
             elif cResp.ctype == CType.PDATA:
                 pData = cResp.transToPData()
                 self.wb.paintFromMsg(pData)
