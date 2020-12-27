@@ -80,8 +80,9 @@ class WhiteBoardCanvas(QLabel):
         myCursor = QCursor(myPixmp)
         self.setCursor(myCursor)
         self.pData.setToEraser()
-#TODO 橡皮失灵
+#TODO 橡皮、文本框失灵
 #TODO 加一个清屏
+#TODO 颜色改变时最后一个图形的颜色也变了。
     def paintEvent(self, event: QPaintEvent):
         painter = QPainter(self.whiteboard)
         if not self.isPaintFromMsg:
