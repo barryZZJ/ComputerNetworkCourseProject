@@ -1,12 +1,6 @@
 import socket
 
-from ClientEnd.GUIs import connect
-
-from WhiteBoard.controlData import CRequest
-
-BUFSIZE = 1024
-debug = False
-
+from WhiteBoard.controlData import CRequest, CResponse
 
 class ClientConn(socket.socket):
     """连接服务器的类，封装socket"""
@@ -15,51 +9,40 @@ class ClientConn(socket.socket):
 
     def __init__(self):
         socket.socket.__init__(self) # create ip socket
-        self.getValuesFromUser()
-        print(f"connected to server at {self.serverIp}:{self.serverPort}")
+        self.isAlive = False
+        self.serverIp = None
+        self.serverPort = None
 
-        self.isAlive = True
-
-    def getValuesFromUser(self):
-        # 弹出连接窗口，获取服务器地址
-        connectWind = connect.ConnectWindow()
-        if not connectWind.validInputs:
-            # 叉掉了窗口，则退出程序
-            exit()
-        connected = False  # 是否连接上
-        while not connected:
-            self.serverIp = connectWind.getServerIp()
-            self.serverPort = connectWind.getServerPorti()
-            # 测试连接能否建立成功，不成功则重新输入
-            connected = self.tryConnect()
-            if not connected:
-                connectWind = connectWind.connectFailedHandler()
-
-        return self.serverIp, self.serverPort
-
-    def getHostIp(self):
-        # 获取本机IP
-        return self.getsockname()[0]
-
-    def tryConnect(self) -> bool:
+    def initConn(self, ip, port):
         """连接服务器，返回是否成功"""
         try:
-            self.connect((self.serverIp, self.serverPort))
+            self.connect((ip, port))
         except socket.error as e:
             print("Error:", e)
             return False
+
+        self.isAlive = True
+        self.serverIp = ip
+        self.serverPort = port
+        print(f"connected to server at {self.serverIp}:{self.serverPort}")
         return True
+
+    @property
+    def hostIp(self):
+        # 获取本机IP
+        return self.getsockname()[0]
 
     def disconnect(self):
         try:
-            self.sendall(CRequest().disconnect().encode())
+            self.sendall(CRequest.disconnect().encode())
         except ConnectionError:
             pass
         self.shutdown(socket.SHUT_RDWR)
         self.close()
         self.isAlive = False
 
-    def sendCDataBytes(self, cDataBytes: bytes):
+    def sendCReq(self, cReq: CRequest):
+        cDataBytes = cReq.encode()
         try:
             self.sendall(cDataBytes)
         except ConnectionError:
@@ -69,6 +52,12 @@ class ClientConn(socket.socket):
             self.isAlive = False
 
 
-    def recvCDataBytes(self):
-        return self.recv(BUFSIZE)
+    def recvCResp(self) -> CResponse:
+        # 一次接收一个CResp
+        data = self.recv(CResponse.HEADER_LEN)
+        cResp = CResponse.decodeHeader(data)
+        data = self.recv(cResp.bodyLen)
+        cResp.decodeBody(data)
+        print("receive", cResp)
+        return cResp
 

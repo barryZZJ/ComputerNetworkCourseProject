@@ -2,51 +2,49 @@ import time
 from threading import Thread
 
 from PyQt5.QtCore import QEvent
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QHBoxLayout, QWidget, QListWidget
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QHBoxLayout, QWidget, QListWidget, QLabel, QVBoxLayout
 
 from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardWindow
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
 
 class Main(QMainWindow):
     _title = "Main"
-    _size = '350x350'
-    _font = ('Consolas', 11)
-    _lf_text = "Members"
+    _size = (350, 350)
+    _label_text = "Members list"
     _but_text_1 = "Start white board"
     _but_text_2 = "Stop white board"
     _but_height = '2'
 
     def __init__(self, board: WhiteBoardWindow, conn: ClientConn, id):
         super().__init__()
-        self.resize(300, 350)
-        self.setFixedSize(300, 350)
+        self.setFixedSize(*self._size)
         self.conn = conn
         self.id = id
         print("user id is", self.id)
-        self.allUserInfos = []
 
-        self.initMainUi()
         self.board = board
+        self.initMainUi()
 
     def closeEvent(self, event):
         self.board.close()
         self.conn.disconnect()
 
     def initMainUi(self):
-        self.setWindowTitle("第一个主窗口应用")
+        self.setWindowTitle(self._title)
         self.setGeometry(200, 200, 200, 100)
         # 状态栏
-        self.status = self.statusBar()
-        self.button1 = QPushButton()
-        self.button1.setText(self._but_text_1)
-        self.button1.setToolTip("按钮说明")
+        self.butWB = QPushButton(self._but_text_1)
 
-        self.listwidget = QListWidget()
+        self.listMembers = QListWidget()
+        labelMembers = QLabel(self._label_text)
+
+        layout2 = QVBoxLayout()
+        layout2.addWidget(labelMembers)
+        layout2.addWidget(self.listMembers)
 
         layout = QHBoxLayout()
-
-        layout.addWidget(self.listwidget)
-        layout.addWidget(self.button1)
+        layout.addLayout(layout2)
+        layout.addWidget(self.butWB)
 
 
         # 主框架，所有控件的放置位置
@@ -55,23 +53,22 @@ class Main(QMainWindow):
         # 使充满屏幕
         self.setCentralWidget(mainFrame)
 
-        self.button1.clicked.connect(self.toggleWhiteBoard)
+        self.butWB.clicked.connect(self.toggleWhiteBoard)
 
     def setUserInfos(self, allUserInfos):
-        self.allUserInfos = allUserInfos
-        self.listwidget.clear()
-        for i, userinfo in enumerate(self.allUserInfos):
-            self.listwidget.insertItem(i, userinfo)
+        self.listMembers.clear()
+        for i, userinfo in enumerate(allUserInfos):
+            self.listMembers.insertItem(i, userinfo)
 
     def toggleWhiteBoard(self):
         if self.board.isHidden():
             # 打开白板
             self.board.show()
-            self.button1.setText(self._but_text_2)
+            self.butWB.setText(self._but_text_2)
         else:
             # 关掉了白板
             self.board.close()
-            self.button1.setText(self._but_text_1)
+            self.butWB.setText(self._but_text_1)
 
 
 
