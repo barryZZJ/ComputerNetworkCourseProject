@@ -22,6 +22,9 @@ class ClientConn(socket.socket):
     def getValuesFromUser(self):
         # 弹出连接窗口，获取服务器地址
         connectWind = connect.ConnectWindow()
+        if not connectWind.validInputs:
+            # 叉掉了窗口，则退出程序
+            exit()
         connected = False  # 是否连接上
         while not connected:
             self.serverIp = connectWind.getServerIp()

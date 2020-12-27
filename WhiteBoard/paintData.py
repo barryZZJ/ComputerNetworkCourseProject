@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Tuple, TypeVar, Type
 
+from PyQt5.QtGui import QColor
+
 ENCODING = 'utf8'
 
 class PType(Enum):
@@ -27,39 +29,42 @@ TPData = TypeVar('TPData', bound='PData')
 class PData:
     """传输的数据结构"""
     SEP = '_'
-    def __init__(self, pType: PType, color: int, body:Type[TPDataBody]=None):
+    def __init__(self, pType: PType, foreColor: QColor, backColor: QColor, body:Type[TPDataBody]=None):
         """
         :param pType: 绘制类型，0-刷子，1-形状，2-文字，3-橡皮
-        :param color: 颜色
+        :param foreColor: 前景色
+        :param backColor: 背景色
         """
         # Header
         self.pType = pType
-        self.color = color
+        self.foreColor = foreColor
+        self.backColor = backColor
 
         # Body
         self.body = body
 
     def __str__(self):
         # 转为字符串
-        l = [str(self.pType), str(self.color), str(self.body)]
+        l = [str(self.pType), str(self.foreColor.value()), str(self.backColor.value()), str(self.body)]
         return PData.SEP.join(l)
 
     @staticmethod
     def decodeFromStr(pdata: str)-> TPData:
         l = pdata.split(PData.SEP)
         pType = PType(int(l[0]))
-        color = int(l[1])
+        foreColor = QColor(int(l[1]))
+        backColor = QColor(int(l[2]))
         body = None
         if pType == PType.BRUSH:
-            body = PDataBrush.decodeFromStr(l[2])
+            body = PDataBrush.decodeFromStr(l[3])
         elif pType == PType.SHAPE:
-            body = PDataShape.decodeFromStr(l[2])
+            body = PDataShape.decodeFromStr(l[3])
         elif pType == PType.TEXT:
-            body = PDataText.decodeFromStr(l[2])
+            body = PDataText.decodeFromStr(l[3])
         elif pType == PType.ERASER:
-            body = PDataEraser.decodeFromStr(l[2])
+            body = PDataEraser.decodeFromStr(l[3])
             
-        return PData(pType, color, body)
+        return PData(pType, foreColor, backColor, body)
 
     def setToBrush(self):
         self.pType = PType.BRUSH
@@ -69,7 +74,7 @@ class PData:
 
     def setToShape(self, sType: SType):
         self.pType = PType.SHAPE
-        self.updateArgs(sType)
+        self.setArgs(sType)
 
     def isLine(self):
         return self.pType == PType.SHAPE and self.body.sType == SType.LINE
@@ -92,7 +97,10 @@ class PData:
     def isEraser(self):
         return self.pType == PType.ERASER
 
-    def updateArgs(self, *args):
+    def setForeColor(self, color: QColor):
+        self.foreColor = color
+
+    def setArgs(self, *args):
         '''
         if PType.BRUSH:
             args: st, ed, width
