@@ -133,6 +133,7 @@ class User(Thread):
                 if cdata != b'':
                     self.handleCtrlRequest(CRequest.decode(cdata))
             except ConnectionError:
+                print("connection error, closing")
                 self.handleDisconnRequest()
 
 if __name__ == '__main__':
