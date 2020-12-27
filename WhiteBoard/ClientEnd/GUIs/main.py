@@ -7,7 +7,6 @@ from PyQt5.QtWidgets import QMainWindow, QPushButton, QHBoxLayout, QWidget, QLis
 from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardWindow
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
 
-
 class Main(QMainWindow):
     _title = "Main"
     _size = '350x350'
@@ -63,7 +62,6 @@ class Main(QMainWindow):
         self.listwidget.clear()
         for i, userinfo in enumerate(self.allUserInfos):
             self.listwidget.insertItem(i, userinfo)
-        self.listwidget.adjustSize()
 
     def toggleWhiteBoard(self):
         if self.board.isHidden():
