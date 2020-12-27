@@ -19,6 +19,7 @@ PATHTOPEN = os.path.join(RESOURCES, "pen.png")
 PATHTOERASER = os.path.join(RESOURCES, "eraser.png")
 PATHTOCOLOR = os.path.join(RESOURCES, "color.png")
 PATHTOWIDTH = os.path.join(RESOURCES, "changewidth.png")
+PATHTOERASE = os.path.join(RESOURCES, "erase.png")
 
 
 class WhiteBoardCanvas(QLabel):
@@ -70,13 +71,13 @@ class WhiteBoardCanvas(QLabel):
 
     def setToText(self):
         print("set to text")
-        self.setCursor(Qt.ArrowCursor)
+        self.setCursor(Qt.CrossCursor)
         self.pData.setToText()
 
     def setToEraser(self):
         # 自定义鼠标形状（png）
         print("set to eraser")
-        myPixmp = QPixmap(PATHTOERASER).scaled(30,30)
+        myPixmp = QPixmap(PATHTOERASE).scaled(30,30)
         myCursor = QCursor(myPixmp)
         self.setCursor(myCursor)
         self.pData.setToEraser()
