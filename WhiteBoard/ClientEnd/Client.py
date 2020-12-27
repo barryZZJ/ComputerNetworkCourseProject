@@ -47,6 +47,7 @@ class Client(Thread, Main, WhiteBoardApp):
 if __name__ == '__main__':
     cl = Client()
     cl.start()
+    print(" === ")
     cl.showWindow()
     # 关闭窗口后断开连接
     cl.exit()
