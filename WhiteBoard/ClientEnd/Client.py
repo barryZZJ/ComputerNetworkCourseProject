@@ -79,7 +79,7 @@ class Client(Thread, QApplication):
                 self.board.wb.paintFromMsg(pData)
 
         # 执行到这里说明连接断开了，关闭窗口
-        self.main.close()
+        self.main.forceClose()
 
 if __name__ == '__main__':
     cl = Client()

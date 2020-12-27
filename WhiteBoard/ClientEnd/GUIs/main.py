@@ -2,6 +2,7 @@ import time
 from threading import Thread
 
 from PyQt5.QtCore import QEvent
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QHBoxLayout, QWidget, QListWidget, QLabel, QVBoxLayout
 
 from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardWindow
@@ -24,9 +25,19 @@ class Main(QMainWindow):
 
         self.board = board
         self.initMainUi()
+        self.forceClosing = False
 
-    def closeEvent(self, event):
-        self.board.close()
+    def forceClose(self):
+        print("main force close")
+        self.forceClosing = True
+        self.close()
+
+    def closeEvent(self, event: QCloseEvent):
+        if self.forceClosing:
+            self.board.forceClose()
+        else:
+            self.board.close()
+        event.accept()
         self.conn.disconnect()
 
     def initMainUi(self):

@@ -274,12 +274,18 @@ class WhiteBoardWindow(QMainWindow):
         else:
             self.initUi(conn.hostIp, id)
         self.callback = callback
+        self.forceClosing = False
+
+    def forceClose(self):
+        print("board force close")
+        self.forceClosing = True
+        self.close()
 
     def closeEvent(self, event: QCloseEvent):
-        #TODO 无响应
         print("board close")
         event.accept()
-        if self.callback:
+        if not self.forceClosing and self.callback:
+            print("callback")
             self.callback()
 
 
