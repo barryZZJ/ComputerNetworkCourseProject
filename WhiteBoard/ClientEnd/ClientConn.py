@@ -14,19 +14,14 @@ class ClientConn(socket.socket):
 
     def __init__(self):
         socket.socket.__init__(self) # create ip socket
-        if debug:
-            self.serverIp = "127.0.0.1"
-            self.serverPort = 5000
-            self.tryConnect()
-        else:
-            self.getValuesFromUser()
+        self.getValuesFromUser()
         print(f"connected to server at {self.serverIp}:{self.serverPort}")
 
         self.isAlive = True
 
     def getValuesFromUser(self):
         # 弹出连接窗口，获取服务器地址
-        connectWind = connect.connectWindow()
+        connectWind = connect.ConnectWindow()
         connected = False  # 是否连接上
         while not connected:
             self.serverIp = connectWind.getServerIp()

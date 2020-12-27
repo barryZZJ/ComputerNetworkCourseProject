@@ -8,7 +8,7 @@ from WhiteBoard.controlData import CResponse, CType
 from WhiteBoard.ClientEnd.GUIs.main import Main
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
 
-class Client(Thread, Main, WhiteBoardApp):
+class Client(Thread, WhiteBoardApp):
     """客户端逻辑，调用GUI模块，显示界面"""
     def __init__(self):
         Thread.__init__(self)
@@ -17,38 +17,40 @@ class Client(Thread, Main, WhiteBoardApp):
         # 获取id
         cdata = self.conn.recvCDataBytes()
         id = CResponse.decode(cdata).transToId()
-        # 创建主窗体
-        Main.__init__(self, self.conn, id)
         # 创建白板窗体
         WhiteBoardApp.__init__(self, self.conn)
+        # 创建主窗体
+        self.main = Main(self, self.conn, id)
 
-    def exit(self):
-        self.conn.disconnect()
+
+
 #TODO 掉线时的处理
     def run(self):
+        print("running thread")
         while self.conn.isAlive:
             cdata = self.conn.recvCDataBytes()
+            print("receive", cdata)
             cResp = CResponse.decode(cdata)
             if cResp.ctype == CType.USERINFOS:
                 userinfodict = cResp.transToUserInfoDict()
                 l = []
                 for id, ip in userinfodict.items():
-                    if id == self.id:
+                    if id == self.main.id:
                         l.append(f"{ip} - {id} (me)")
                     else:
                         l.append(f"{ip} - {id}")
-                self.allUserInfos = l
-                self.allUserInfosVar.set(l)
+                self.main.allUserInfos = l
+                self.main.allUserInfosVar.set(l)
             elif cResp.ctypeype == CType.PDATA:
                 pData = cResp.transToPData()
                 self.wb.paintFromMsg(pData)
 
-
 if __name__ == '__main__':
     cl = Client()
     cl.start()
-    print(" === ")
-    cl.showWindow()
-    # 关闭窗口后断开连接
-    cl.exit()
+
+    cl.main.showWindow()
+    print("waiting thread")
+
     cl.join()
+    print("main thread done")

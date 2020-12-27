@@ -5,7 +5,7 @@ import tkinter.messagebox as messagebox
 import re
 # 连接窗口
 
-class connectWindow(Tk):
+class ConnectWindow(Tk):
     _title = "Connection"
     _size = '300x200'
     _but_width = '10'
@@ -23,7 +23,6 @@ class connectWindow(Tk):
         self.geometry(self._size)
         self.title(self._title)
         self.initMainUi(self)
-        self.focus_force()
         self.mainloop()
 
     def initMainUi(self, master):
@@ -102,7 +101,7 @@ class connectWindow(Tk):
     def connectFailedHandler():
         '''连接服务器失败时的处理。弹出对应提示框。'''
         showerrorTop("Failed to connect to server, please try again.")
-        return connectWindow()
+        return ConnectWindow()
 
 def showerrorTop(msg):
     # 用于没有主窗体时的showerror
@@ -123,6 +122,6 @@ def validPort(port: str) -> bool:
     return port.isnumeric() and 0<=int(port)<=65535
 
 if __name__ == '__main__':
-    login = connectWindow()
-    connectWindow.connectFailedHandler()
+    login = ConnectWindow()
+    ConnectWindow.connectFailedHandler()
     # print(validIp('123'))

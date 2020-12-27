@@ -144,7 +144,9 @@ class PDataBrush(PDataBody):
 
 class PDataShape(PDataBody):
     """形状类型的数据结构"""
-    def __init__(self, sType: SType, st: Tuple = None, ed: Tuple = None, width = None):
+
+    def __init__(self, sType: SType, st: Tuple=None, ed: Tuple=None, width=None):
+
         """
         :param sType: 形状类型，0-直线，1-矩形，2-圆
         :param st: 起点
