@@ -78,30 +78,53 @@ class User(Thread):
         self.alive = True
         self.ip = addr[0]
 
+    def assignId(self):
+        cResp = CResponse.id(self.id)
+        print("respond to", self.ip, '-', self.id)
+        self.sendCResp(cResp)
+        Server.mutexIncUserId()
+
+    def forwardContent(self, bodyStr):
+        # 把内容封装到response里，转发给除了自己之外的所有用户
+        cResp = CResponse.pData(bodyStr)
+        for id, user in users.items():
+            if id != self.id:
+                print("forward pdata to user ", id)
+                user.sendCResp(cResp)
+
+    def sendUserInfos(self):
+        cResp = CResponse.userInfos(userInfos)
+        print("send userinfo to", self.ip, '-', self.id)
+        self.sendCResp(cResp)
+
+    def sendCResp(self, cResp: CResponse):
+        cRespBytes = cResp.encode()
+        try:
+            print("send", cRespBytes)
+            self.conn.sendall(cRespBytes)
+        except ConnectionError:
+            print("connection error, closing")
+            self.handleDisconnRequest()
+
+    def recvCReq(self) -> CRequest:
+        # 一次接收一个CReq
+        # TODO 为什么会收到''?
+        data = self.conn.recv(CRequest.HEADER_LEN)
+        if data != b'':
+            print("receive header", data)
+            cReq = CRequest.decodeHeader(data)
+            data = self.conn.recv(cReq.bodyLen)
+            print("receive body", data)
+            cReq.decodeBody(data)
+            return cReq
+        return CRequest(CType.NOOP)
+
     def handleCtrlRequest(self, cReq: CRequest):
-        print("receive from", self.ip, '-', self.id, "-", cReq.ctype.name)
+        print("type:", cReq.ctype.name)
         if cReq.ctype == CType.PDATA:
             self.forwardContent(cReq.body)
         elif cReq.ctype == CType.DISCONNECT:
             self.handleDisconnRequest()
-
-    def assignId(self):
-        cResp = CResponse().id(self.id)
-        try:
-            self.conn.sendall(cResp.encode())
-            print("respond to", self.ip, '-', self.id)
-            Server.mutexIncUserId()
-        except Exception as e:
-            print("assignId failure")
-            print(e)
-
-    def forwardContent(self, bodyStr):
-        # 把内容封装到response里，转发给除了自己之外的所有用户
-        cRespBytes = CResponse(CType.PDATA, bodyStr).encode()
-        for id, user in users.items():
-            if id != self.id:
-                print("forward pdata to user ", id)
-                user.conn.sendall(cRespBytes)
 
     def handleDisconnRequest(self):
         # 连接关闭
@@ -115,23 +138,12 @@ class User(Thread):
         for id, user in users.items():
             user.sendUserInfos()
 
-    def sendUserInfos(self):
-        cResp = CResponse().userInfos(userInfos)
-        try:
-            self.conn.sendall(cResp.encode())
-            print("send userinfo", cResp.contents, "to", self.ip, '-', self.id)
-        except Exception as e:
-            print("sendUserInfos failure")
-            print(e)
-
     def run(self):
         while self.alive:
             try:
-                cdata = self.conn.recv(BUFSIZE)  # 阻塞，收到数据后唤醒
-                #TODO 为什么会收到''?
-                print("receive", cdata)
-                if cdata != b'':
-                    self.handleCtrlRequest(CRequest.decode(cdata))
+                print("receive from", self.ip, '-', self.id)
+                cReq = self.recvCReq()  # 阻塞，收到数据后唤醒
+                self.handleCtrlRequest(cReq)
             except ConnectionError:
                 print("connection error, closing")
                 self.handleDisconnRequest()

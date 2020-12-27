@@ -5,13 +5,14 @@ from enum import Enum, auto
 from WhiteBoard.paintData import PData
 
 ENCODING = 'utf8'
-CSEP = ';'
+CSEP = ''
 
 class CType(Enum):
     ID = auto() # 用户的ID
     USERINFOS = auto() # 所有用户
     PDATA = auto() # 画图数据
     DISCONNECT = auto() # 断开连接
+    NOOP = auto()
 
     def __str__(self):
         """The value of the Enum member."""
@@ -22,82 +23,102 @@ class CType(Enum):
 
 
 class CRequest:
-    def __init__(self, ctype=None, body=None):
-        self.ctype = ctype
+    HEADER_LEN = 4
+    def __init__(self, ctype=None, bodyLen=None, body=None):
+        # header
+        self.ctype = ctype # 1 byte
+        self.bodyLen = bodyLen # 3 byte
+        # body
         self.body = body
 
-    def pData(self, pData: PData):
-        self.ctype = CType.PDATA
-        self.body = pData
-        return self
+    @staticmethod
+    def mkRequest(ctype, body=None):
+        if body:
+            bodyLen = '%03d' % len(str(body))
+        else:
+            bodyLen =  '000'
+        return CRequest(ctype, bodyLen, body)
 
-    def disconnect(self):
-        self.ctype = CType.DISCONNECT
-        return self
+    @staticmethod
+    def pData(pData: PData):
+        return CRequest.mkRequest(CType.PDATA, pData)
+
+    @staticmethod
+    def disconnect():
+        ctype = CType.DISCONNECT
+        return CRequest.mkRequest(ctype)
 
     def __str__(self):
-        l = [str(self.ctype), '' if self.body is None else str(self.body)]
+        # bodyLen 占 3 位
+        l = [str(self.ctype), str(self.bodyLen), str(self.body) if self.body else '']
         return CSEP.join(l)
 
     def encode(self) -> bytes:
         return str(self).encode(ENCODING)
 
     @staticmethod
-    def decode(cdata: bytes):
-        l = cdata.decode(ENCODING).split(CSEP)
+    def decodeHeader(headers: bytes):
+        l = headers.decode(ENCODING)
         type = CType(int(l[0]))
-        bodystr = None
-        if l[1] != '':
-            bodystr = l[1]
-        return CRequest(type, bodystr)
+        bodyLen = int(l[1:CResponse.HEADER_LEN])
+        return CRequest(type, bodyLen=bodyLen)
 
-class CResponse:
-    def __init__(self, ctype=None, contents=None):
-        self.ctype = ctype
-        self.contents = contents
-
-    def mkResponse(self, type: CType, contents: str):
-        self.ctype = type
-        self.contents = contents
+    def decodeBody(self, bodyData):
+        self.body = bodyData
         return self
 
-    def id(self, id: int):
+class CResponse:
+    HEADER_LEN = 4
+    def __init__(self, ctype=None, bodyLen=None, body:str=None):
+        # header
+        self.ctype = ctype  # 1 byte
+        self.bodyLen = bodyLen  # 3 byte
+        # body
+        self.body = body
+
+    @staticmethod
+    def mkResponse(ctype: CType, body: str):
+        if body:
+            bodyLen = '%03d' % len(str(body))
+        else:
+            bodyLen = '000'
+        return CResponse(ctype, bodyLen, body)
+
+    @staticmethod
+    def id(id: int):
         # 每当新用户连接时，发送给该用户
-        return self.mkResponse(CType.ID, str(id))
+        return CResponse.mkResponse(CType.ID, str(id))
 
-    def userInfos(self, usersdict: dict):
+    @staticmethod
+    def userInfos(usersdict: dict):
         # 每当新用户连接时或有用户断开时，发送给所有用户
-        return self.mkResponse(CType.USERINFOS, json.dumps(usersdict))
+        return CResponse.mkResponse(CType.USERINFOS, json.dumps(usersdict))
 
-    def pData(self, pData:PData):
-        return self.mkResponse(CType.PDATA, str(pData))
+    @staticmethod
+    def pData(pData:PData):
+        return CResponse.mkResponse(CType.PDATA, str(pData))
 
     def __str__(self):
-        data = []
-        data.append(str(self.ctype))
-        data.append(self.contents)
-        return CSEP.join(data)
+        l = [str(self.ctype), str(self.bodyLen), str(self.body)]
+        return CSEP.join(l)
 
     def encode(self) -> bytes:
         return str(self).encode(ENCODING)
 
     @staticmethod
-    def decode(cdata: bytes):
-        type, contents = cdata.decode(ENCODING).split(CSEP)
-        type = CType(int(type))
-        return CResponse(type, contents)
+    def decodeHeader(headers: bytes):
+        l = headers.decode(ENCODING)
+        type = CType(int(l[0]))
+        bodyLen = int(l[1:CResponse.HEADER_LEN])
+        return CResponse(type, bodyLen=bodyLen)
 
-    def transToPData(self) -> PData:
-        return PData.decodeFromStr(self.contents)
-
-    def transToId(self):
-        return self.contents
-
-    def transToUserInfoDict(self) -> dict:
-        userinfos = json.loads(self.contents)
-        return userinfos
-
-if __name__ == '__main__':
-
-    pass
+    def decodeBody(self, bodyDataBytes: bytes):
+        bodyData = bodyDataBytes.decode(ENCODING)
+        if self.ctype == CType.PDATA:
+            self.body = PData.decodeFromStr(bodyData)
+        elif self.ctype == CType.ID:
+            self.body = bodyData
+        elif self.ctype == CType.USERINFOS:
+            self.body = json.loads(bodyData)
+        return self
 
