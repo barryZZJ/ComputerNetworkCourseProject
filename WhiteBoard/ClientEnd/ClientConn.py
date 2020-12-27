@@ -40,8 +40,6 @@ class ClientConn(socket.socket):
         # 获取本机IP
         return self.getsockname()[0]
 
-#TODO 连接断开时的处理
-
     def tryConnect(self) -> bool:
         """连接服务器，返回是否成功"""
         try:

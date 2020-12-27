@@ -1,4 +1,7 @@
-#TODO 改成mttk行不行
+import time
+from threading import Thread
+
+from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QHBoxLayout, QWidget, QListWidget
 
 from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardWindow
@@ -55,17 +58,12 @@ class Main(QMainWindow):
 
         self.button1.clicked.connect(self.toggleWhiteBoard)
 
-        #TODO 禁止click
-
-
-
     def setUserInfos(self, allUserInfos):
         self.allUserInfos = allUserInfos
         self.listwidget.clear()
         for i, userinfo in enumerate(self.allUserInfos):
             self.listwidget.insertItem(i, userinfo)
         self.listwidget.adjustSize()
-
 
     def toggleWhiteBoard(self):
         if self.board.isHidden():
@@ -74,11 +72,9 @@ class Main(QMainWindow):
             self.button1.setText(self._but_text_2)
         else:
             # 关掉了白板
-            self.board.hide()
+            self.board.close()
             self.button1.setText(self._but_text_1)
 
-#TODO 手动关掉白板时，修改button行为
-#TODO 关掉main时，白板也要关掉；发送disconnect之类的
 
 
 

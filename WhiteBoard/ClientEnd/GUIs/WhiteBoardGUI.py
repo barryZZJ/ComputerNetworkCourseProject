@@ -2,7 +2,8 @@ import os
 from time import sleep
 
 from PyQt5.QtWidgets import QMainWindow, QApplication,  QLineEdit, QInputDialog, QColorDialog, QLabel, QAction, QMessageBox
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QMouseEvent, QCursor, QPaintEvent, QColor
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QMouseEvent, QCursor, QPaintEvent, QColor, QActionEvent, \
+    QCloseEvent
 from PyQt5.QtCore import Qt
 
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
@@ -247,7 +248,7 @@ class WhiteBoardCanvas(QLabel):
         self.update()
 
 class WhiteBoardWindow(QMainWindow):
-    def __init__(self, conn: ClientConn, id):
+    def __init__(self, conn: ClientConn, id, callback):
         super().__init__()
         self.wb = WhiteBoardCanvas(self, conn)
         if conn is None:
@@ -255,6 +256,11 @@ class WhiteBoardWindow(QMainWindow):
             self.initUi()
         else:
             self.initUi(conn.getHostIp(), id)
+        self.callback = callback
+
+    def closeEvent(self, a0: QCloseEvent):
+        print("board close")
+        self.callback()
 
     def initUi(self, ip='', id=''):
         self.resize(770, 570)

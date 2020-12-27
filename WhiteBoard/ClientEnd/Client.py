@@ -25,9 +25,12 @@ class Client(Thread, QApplication):
         # 启动app主线程
         QApplication.__init__(self, [])
         # 创建白板窗体
-        self.board = WhiteBoardWindow(self.conn, id)
+        self.board = WhiteBoardWindow(self.conn, id, callback=self.toggleWhiteBoard)
         # 创建主窗体
         self.main = Main(self.board, self.conn, id)
+
+    def toggleWhiteBoard(self):
+        self.main.toggleWhiteBoard()
 
     def startClientWindow(self):
         self.main.show()
