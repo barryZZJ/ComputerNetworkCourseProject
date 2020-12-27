@@ -1,6 +1,7 @@
 import socket
 
-from WhiteBoard.ClientEnd.GUIs import connect
+from ClientEnd.GUIs import connect
+
 from WhiteBoard.controlData import CRequest
 
 BUFSIZE = 1024
