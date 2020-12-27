@@ -37,6 +37,7 @@ class WhiteBoardCanvas(QLabel):
         self.y2 = 0 # 坐标
         self.text = ""  # 记录输入的文字
         self.width = 4  # pen width
+        self.eraserWidth = 10
         self.pData = PData(PType.NA, self.foreColor, self.backColor)
         self.serverMsg: PData
         self.isMouseDown = False
@@ -102,8 +103,8 @@ class WhiteBoardCanvas(QLabel):
                 if self.conn:
                     self.sendCReq()
             elif self.pData.isEraser() and self.isMouseDown:
-                painter.setPen(QPen(self.backColor, self.width, Qt.SolidLine))
-                self.pData.set((self.x1, self.y1), (self.x2, self.y2), self.width)
+                painter.setPen(QPen(self.backColor, self.eraserWidth, Qt.SolidLine))
+                self.pData.set((self.x1, self.y1), (self.x2, self.y2), self.eraserWidth)
                 print("draw eraser local")
                 painter.drawLine(self.x1, self.y1, self.x2, self.y2)
                 if self.conn:
@@ -262,8 +263,7 @@ class WhiteBoardCanvas(QLabel):
         self.doPaint()
         self.update()
 
-#TODO 橡皮默认width 10
-#TODO 调粗细窗口默认值设为当前width
+
 class WhiteBoardWindow(QMainWindow):
     def __init__(self, conn: ClientConn, id, callback):
         super().__init__()
@@ -347,7 +347,7 @@ class WhiteBoardWindow(QMainWindow):
             self.wb.setForeColor(Color)
 
     def changeWidth(self):
-        width, okPressed = QInputDialog.getInt(self, '选择画笔粗细', '请输入粗细：', min=1, step=1)
+        width, okPressed = QInputDialog.getInt(self, '选择画笔粗细', '请输入粗细：', value=self.wb.width, min=1, step=1)
         if okPressed:
             self.wb.width = width
 

@@ -61,7 +61,6 @@ class Client(Thread, QApplication):
                 print("recv error")
                 print("connection to server is unavailable, closing program...")
                 break
-            #TODO print twice
             print("receive", cResp)
             if cResp.ctype == CType.USERINFOS:
                 # 收到用户信息
