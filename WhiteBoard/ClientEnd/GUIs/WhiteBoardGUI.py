@@ -37,10 +37,10 @@ class WhiteBoardCanvas(QLabel):
         self.y2 = 0 # 坐标
         self.text = ""  # 记录输入的文字
         self.width = 4  # pen width
-        self.pData = PData(PType.BRUSH, self.foreColor, self.backColor)
+        self.pData = PData(PType.NA, self.foreColor, self.backColor)
         self.serverMsg: PData
         self.isMouseDown = False
-        self.isMouseUp = not self.isMouseDown
+        self.isMouseUp = True
         self.isPaintFromMsg = False
 
     def setForeColor(self, color: QColor):
@@ -70,7 +70,7 @@ class WhiteBoardCanvas(QLabel):
 
     def setToText(self):
         print("set to text")
-        self.setCursor(Qt.ArrowCursor)
+        self.setCursor(Qt.CrossCursor)
         self.pData.setToText()
 
     def setToEraser(self):
@@ -81,25 +81,29 @@ class WhiteBoardCanvas(QLabel):
         self.setCursor(myCursor)
         self.pData.setToEraser()
 
-#TODO 橡皮、文本框失灵
 #TODO 加一个清屏
-#TODO 颜色改变时最后一个图形的颜色也变了。（修改setPen的时机)
+
     def paintEvent(self, event: QPaintEvent):
+        QPainter(self).drawPixmap(2, 2, self.whiteboard)
+        event.accept()
+
+    def doPaint(self):
         painter = QPainter(self.whiteboard)
         if not self.isPaintFromMsg:
             # 本地作画行为
             #这里需要接受服务器的图形添加在客户端
+            print("in do paint")
+
             if self.pData.isBrush() and self.isMouseDown:
                 painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
-                self.pData.setArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
+                self.pData.set((self.x1, self.y1), (self.x2, self.y2), self.width)
                 print("draw dot local")
                 painter.drawLine(self.x1, self.y1, self.x2, self.y2)
                 if self.conn:
                     self.sendCReq()
-
             elif self.pData.isEraser() and self.isMouseDown:
                 painter.setPen(QPen(self.backColor, self.width, Qt.SolidLine))
-                self.pData.setArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
+                self.pData.set((self.x1, self.y1), (self.x2, self.y2), self.width)
                 print("draw eraser local")
                 painter.drawLine(self.x1, self.y1, self.x2, self.y2)
                 if self.conn:
@@ -109,7 +113,7 @@ class WhiteBoardCanvas(QLabel):
                 # 画直线
                 painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
                 print("draw line local")
-                self.pData.setArgs(SType.LINE, (self.x1, self.y1), (self.x2, self.y2), self.width)
+                self.pData.set(SType.LINE, (self.x1, self.y1), (self.x2, self.y2), self.width)
                 painter.drawLine(self.x1, self.y1, self.x2, self.y2)
                 if self.conn:
                     self.sendCReq()
@@ -118,7 +122,7 @@ class WhiteBoardCanvas(QLabel):
                 # 画圆
                 painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
                 print("draw circle local")
-                self.pData.setArgs(SType.CIRCLE, (self.x1, self.y1), (self.x2, self.y2), self.width)
+                self.pData.set(SType.CIRCLE, (self.x1, self.y1), (self.x2, self.y2), self.width)
                 painter.drawEllipse(self.x1, self.y1, self.x2 - self.x1, self.y2 - self.y1)
                 if self.conn:
                     self.sendCReq()
@@ -127,7 +131,7 @@ class WhiteBoardCanvas(QLabel):
                 # 画矩形
                 painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
                 print("draw rec local")
-                self.pData.setArgs(SType.RECT, (self.x1, self.y1), (self.x2, self.y2), self.width)
+                self.pData.set(SType.RECT, (self.x1, self.y1), (self.x2, self.y2), self.width)
                 painter.drawRect(self.x1, self.y1, self.x2 - self.x1, self.y2 - self.y1)
                 if self.conn:
                     self.sendCReq()
@@ -136,7 +140,7 @@ class WhiteBoardCanvas(QLabel):
                 # 画文字
                 painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
                 print("draw text local")
-                self.pData.setArgs(self.text, (self.x1, self.y1))
+                self.pData.set(self.text, (self.x1, self.y1))
                 painter.drawText(self.x1, self.y1,self.text)
                 if self.conn:
                     self.sendCReq()
@@ -206,8 +210,6 @@ class WhiteBoardCanvas(QLabel):
             except Exception as e:
                 print(e)
 
-        Label_painter = QPainter(self)
-        Label_painter.drawPixmap(2, 2, self.whiteboard)
 
     def mousePressEvent(self, event: QMouseEvent):
         # 鼠标按下
@@ -218,7 +220,8 @@ class WhiteBoardCanvas(QLabel):
             self.x2 = self.x1
             self.y2 = self.y1
             self.isMouseDown = True
-            self.isMouseUp = not self.isMouseDown
+            self.isMouseUp = False
+            self.doPaint()
             self.update()
 
     def mouseMoveEvent(self, event):
@@ -229,7 +232,7 @@ class WhiteBoardCanvas(QLabel):
             self.y1 = self.y2
             self.x2 = event.x()
             self.y2 = event.y()
-
+            self.doPaint()
             self.update()
 
     def mouseReleaseEvent(self, event):
@@ -241,7 +244,8 @@ class WhiteBoardCanvas(QLabel):
             self.x2 = event.x()
             self.y2 = event.y()
             self.isMouseDown = False
-            self.isMouseUp = not self.isMouseDown
+            self.isMouseUp = True
+            self.doPaint()
             self.update()
 
     def sendCReq(self):
@@ -255,8 +259,11 @@ class WhiteBoardCanvas(QLabel):
     def paintFromMsg(self, pData: PData):
         self.isPaintFromMsg = True
         self.serverMsg = pData
+        self.doPaint()
         self.update()
 
+#TODO 橡皮默认width 10
+#TODO 调粗细窗口默认值设为当前width
 class WhiteBoardWindow(QMainWindow):
     def __init__(self, conn: ClientConn, id, callback):
         super().__init__()
@@ -268,10 +275,13 @@ class WhiteBoardWindow(QMainWindow):
             self.initUi(conn.hostIp, id)
         self.callback = callback
 
-    def closeEvent(self, a0: QCloseEvent):
+    def closeEvent(self, event: QCloseEvent):
+        #TODO 无响应
         print("board close")
+        event.accept()
         if self.callback:
             self.callback()
+
 
     def initUi(self, ip='', id=''):
         self.resize(770, 570)

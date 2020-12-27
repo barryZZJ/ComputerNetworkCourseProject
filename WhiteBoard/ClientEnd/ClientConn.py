@@ -46,6 +46,7 @@ class ClientConn(socket.socket):
         try:
             self.sendall(cDataBytes)
         except ConnectionError:
+            print("send error")
             print("connection to server is unavailable, closing program...")
             self.shutdown(socket.SHUT_RDWR)
             self.close()

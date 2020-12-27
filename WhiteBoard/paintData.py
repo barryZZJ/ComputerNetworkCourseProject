@@ -6,11 +6,12 @@ from PyQt5.QtGui import QColor
 ENCODING = 'utf8'
 
 class PType(Enum):
-    """绘制类型，0-刷子，1-形状，2-文字，3-橡皮"""
+    """绘制类型，0-刷子，1-形状，2-文字，3-橡皮, 4-不可用"""
     BRUSH = 0
     SHAPE = 1
     TEXT = 2
     ERASER = 3
+    NA = 4
     def __str__(self):
         return str(self.value)
 
@@ -74,7 +75,7 @@ class PData:
 
     def setToShape(self, sType: SType):
         self.pType = PType.SHAPE
-        self.setArgs(sType)
+        self.set(sType)
 
     def isLine(self):
         return self.pType == PType.SHAPE and self.body.sType == SType.LINE
@@ -100,7 +101,7 @@ class PData:
     def setForeColor(self, color: QColor):
         self.foreColor = color
 
-    def setArgs(self, *args):
+    def set(self, *args):
         '''
         if PType.BRUSH:
             args: st, ed, width

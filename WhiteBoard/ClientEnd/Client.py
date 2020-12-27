@@ -58,8 +58,10 @@ class Client(Thread, QApplication):
                 cResp = self.conn.recvCResp()
             except OSError as e:
                 # 关闭socket连接后阻塞中的recv会触发OSError
+                print("recv error")
                 print("connection to server is unavailable, closing program...")
                 break
+            #TODO print twice
             print("receive", cResp)
             if cResp.ctype == CType.USERINFOS:
                 # 收到用户信息
