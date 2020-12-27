@@ -1,17 +1,17 @@
 # @Author : ZZJ, CJY
-
-from tkinter import *
-import tkinter.messagebox as messagebox
 import re
 # 连接窗口
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QLineEdit, QLabel, QPushButton, QVBoxLayout, \
+    QMessageBox, QHBoxLayout
 
-class ConnectWindow(Tk):
+
+class ConnectWindow(QMainWindow):
     _title = "Connection"
     _size = '300x200'
     _but_width = '10'
     _but_height = '2'
     _text_but = 'Connect'
-    _text_ip = 'server IP  '
+    _text_ip = 'server IP    '
     _text_default_ip = '127.0.0.1'
     _text_port = 'server port'
     _text_default_port = '5000'
@@ -19,80 +19,94 @@ class ConnectWindow(Tk):
 
     # TODO 改icon等
     def __init__(self):
+        self.app = QApplication([])
         self.validInputs = False
         super().__init__()
-        self.geometry(self._size)
-        self.title(self._title)
+
+        self.resize(300, 200)
+        self.setFixedSize(300, 200)
+#        self.title(self._title)
         self.initMainUi(self)
-        self.mainloop()
 
     def initMainUi(self, master):
         # 生成主界面
 
         # 占位
-        labelblock = Label(master, height=2)
-        labelblock.pack()
-
-        fIp = Frame(master)
-        fIp.pack()
+        # labelblock = Label(master, height=2)
+        # labelblock.pack()
+        self.serverPort = self._text_default_port
+        self.fIp = QLineEdit(self)
+        self.fIp.setText("127.0.0.1")
 
         # ip输入
-        labelIp = Label(fIp, text=self._text_ip, font=self._font)
-        labelIp.pack(side=LEFT)
-        self.serverIp = StringVar(value=self._text_default_ip)
-        self.entryIp = Entry(fIp, font=self._font, textvariable=self.serverIp)
-        self.entryIp.focus()
-        self.entryIp.pack(side=RIGHT)
+        self.labelIp = QLabel(self._text_ip)
 
-        labelblock2 = Label(master)
-        labelblock2.pack()
 
         # 端口输入
-        fPort = Frame(master)
-        fPort.pack()
-        labelPort = Label(fPort, text=self._text_port, font=self._font)
-        labelPort.pack(side=LEFT)
-        self.serverPort = StringVar(value=self._text_default_port)
-        self.entryPort = Entry(fPort, font=self._font, textvariable=self.serverPort)
-        self.entryPort.pack(side=RIGHT)
+        self.fPort = QLineEdit(self)
+        self.fPort.setText("5000")
+        self.labelPort = QLabel(self._text_port)
 
-        labelblock3 = Label(master)
-        labelblock3.pack()
 
         # 登录按钮
-        but_connect = Button(master,
-                             text=self._text_but,
-                             height=self._but_height,
-                             font=self._font)
-        # 绑定触发函数
-        but_connect['command'] = self.butConnectHandler
-        but_connect.pack()
 
-        # 回车触发按钮行为
-        self.entryIp.bind('<Return>', self.butConnectHandler)
-        self.entryPort.bind('<Return>', self.butConnectHandler)
+        self.button1 = QPushButton()
+        self.button1.setText(self._text_but)
+        self.button1.setToolTip("connect")
+
+        # 绑定触发函数
+
+        self.button1.clicked.connect(self.butConnectHandler)
+
+
+        layout = QVBoxLayout()
+        layout2 = QHBoxLayout()
+        layout3 = QHBoxLayout()
+        layout2.addWidget(self.labelIp)
+        layout2.addWidget(self.fIp)
+        layout3.addWidget(self.labelPort)
+        layout3.addWidget(self.fPort)
+        layout.addLayout(layout2)
+        layout.addLayout(layout3)
+        layout.addWidget(self.button1)
+
+        # 主框架，所有控件的放置位置
+        mainFrame = QWidget()
+        mainFrame.setLayout(layout)
+        self.setCentralWidget(mainFrame)
+
+        self.show()
+        self.app.exec()
+
+    def keyPressEvent(self, event):#回车事件
+        if str(event.key()) == '16777220':  # 回车
+            self.butConnectHandler()
 
     def butConnectHandler(self, evnet=None):
         """button逻辑，判断输入是否合法"""
         # 验证IP地址是否合法
+        print("进入逻辑判断")
         if not validIp(self.getServerIp()):
-            messagebox.showerror(message=f"Invalid IP address: {self.getServerIp()}")
-            self.entryIp.focus()
+            #QMessageBox.show("Invalid IP address: {self.getServerIp()}")
+
+            #self.entryIp.focus()
+            print("bbb")
             return
         # 验证端口号是否合法
         if not validPort(self.getServerPorta()):
-            messagebox.showerror(message=f"Invalid port: {self.getServerPorta()}")
-            self.entryPort.focus()
+            print("aaa")
+            #QMessageBox.showerror(message=f"Invalid port: {self.getServerPorta()}")
+            #self.entryPort.focus()
             return
         self.validInputs = True
         self.destroy()
 
     def getServerIp(self) -> str:
-        return self.serverIp.get()
+        return self.fIp.text()
     def getServerPorti(self) -> int:
-        return int(self.serverPort.get())
+        return int(self.fPort.text())
     def getServerPorta(self) -> str:
-        return self.serverPort.get()
+        return self.serverPort
 
     @staticmethod
     def connectFailedHandler():
@@ -102,10 +116,10 @@ class ConnectWindow(Tk):
 
 def showerrorTop(msg):
     # 用于没有主窗体时的showerror
-    temp = Tk()
-    temp.withdraw()
-    messagebox.showerror(message=msg)
-    temp.destroy()
+    #temp = Tk()
+
+    QMessageBox.showerror(message=msg)
+
 
 
 def validIp(ip: str) -> bool:
@@ -119,6 +133,8 @@ def validPort(port: str) -> bool:
     return port.isnumeric() and 0<=int(port)<=65535
 
 if __name__ == '__main__':
-    login = ConnectWindow()
-    ConnectWindow.connectFailedHandler()
+    app = QApplication([])
+    theWindow = ConnectWindow
+    # theWindow.show()
+    app.exec()
     # print(validIp('123'))
