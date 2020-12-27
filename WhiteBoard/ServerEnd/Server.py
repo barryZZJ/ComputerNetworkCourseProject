@@ -81,7 +81,6 @@ class User(Thread):
     def handleCtrlRequest(self, cReq: CRequest):
         print("receive from", self.ip, '-', self.id, "-", cReq.ctype.name)
         if cReq.ctype == CType.PDATA:
-            print(cReq.body)
             self.forwardContent(cReq.body)
         elif cReq.ctype == CType.DISCONNECT:
             self.handleDisconnRequest()
@@ -101,6 +100,7 @@ class User(Thread):
         cRespBytes = CResponse(CType.PDATA, bodyStr).encode()
         for id, user in users.items():
             if id != self.id:
+                print("forward pdata to user ", id)
                 user.conn.sendall(cRespBytes)
 
     def handleDisconnRequest(self):
@@ -128,7 +128,9 @@ class User(Thread):
         while self.alive:
             try:
                 cdata = self.conn.recv(BUFSIZE)  # 阻塞，收到数据后唤醒
-                self.handleCtrlRequest(CRequest.decode(cdata))
+                #TODO 为什么会收到''?
+                if cdata != b'':
+                    self.handleCtrlRequest(CRequest.decode(cdata))
             except ConnectionError:
                 self.handleDisconnRequest()
 

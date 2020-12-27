@@ -19,6 +19,7 @@ class ConnectWindow(Tk):
 
     # TODO 改icon等
     def __init__(self):
+        self.validInputs = False
         super().__init__()
         self.geometry(self._size)
         self.title(self._title)
@@ -73,7 +74,6 @@ class ConnectWindow(Tk):
 
     def butConnectHandler(self, evnet=None):
         """button逻辑，判断输入是否合法"""
-
         # 验证IP地址是否合法
         if not validIp(self.getServerIp()):
             messagebox.showerror(message=f"Invalid IP address: {self.getServerIp()}")
@@ -84,11 +84,8 @@ class ConnectWindow(Tk):
             messagebox.showerror(message=f"Invalid port: {self.getServerPorta()}")
             self.entryPort.focus()
             return
-
+        self.validInputs = True
         self.destroy()
-
-    def exit_program(self):
-        exit()
 
     def getServerIp(self) -> str:
         return self.serverIp.get()

@@ -18,7 +18,7 @@ class Client(Thread, WhiteBoardApp):
         cdata = self.conn.recvCDataBytes()
         id = CResponse.decode(cdata).transToId()
         # 创建白板窗体
-        WhiteBoardApp.__init__(self, self.conn)
+        WhiteBoardApp.__init__(self, self.conn, id)
         # 创建主窗体
         self.main = Main(self, self.conn, id)
 
@@ -28,7 +28,12 @@ class Client(Thread, WhiteBoardApp):
     def run(self):
         print("running thread")
         while self.conn.isAlive:
-            cdata = self.conn.recvCDataBytes()
+            try:
+                cdata = self.conn.recvCDataBytes()
+            except OSError as e:
+                # 关闭socket连接后阻塞中的recv会触发OSError
+                print(e)
+                break
             print("receive", cdata)
             cResp = CResponse.decode(cdata)
             if cResp.ctype == CType.USERINFOS:
@@ -41,7 +46,7 @@ class Client(Thread, WhiteBoardApp):
                         l.append(f"{ip} - {id}")
                 self.main.allUserInfos = l
                 self.main.allUserInfosVar.set(l)
-            elif cResp.ctypeype == CType.PDATA:
+            elif cResp.ctype == CType.PDATA:
                 pData = cResp.transToPData()
                 self.wb.paintFromMsg(pData)
 
@@ -49,6 +54,7 @@ if __name__ == '__main__':
     cl = Client()
     cl.start()
     cl.main.showWindow()
+    cl.conn.disconnect()
     print("waiting thread")
     cl.join()
     print("main thread done")
