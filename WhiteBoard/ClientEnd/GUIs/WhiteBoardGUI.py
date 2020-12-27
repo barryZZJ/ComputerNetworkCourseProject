@@ -101,32 +101,41 @@ class WhiteBoardCanvas(QLabel):
                     self.pData.updateArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
                     print("draw eraser local")
                 painter.drawLine(self.x1, self.y1, self.x2, self.y2)
+                if self.conn:
+                    self.sendCData()
 
             elif self.pData.isLine() and self.isMouseUp:
                 # 画直线
                 print("draw line local")
                 self.pData.updateArgs(SType.LINE, (self.x1, self.y1), (self.x2, self.y2), self.width)
                 painter.drawLine(self.x1, self.y1, self.x2, self.y2)
+                if self.conn:
+                    self.sendCData()
 
             elif self.pData.isCircle() and self.isMouseUp:
                 # 画圆
                 print("draw circle local")
                 self.pData.updateArgs(SType.CIRCLE, (self.x1, self.y1), (self.x2, self.y2), self.width)
                 painter.drawEllipse(self.x1, self.y1, self.x2 - self.x1, self.y2 - self.y1)
+                if self.conn:
+                    self.sendCData()
 
             elif self.pData.isRect() and self.isMouseUp:
                 # 画矩形
                 print("draw rec local")
                 self.pData.updateArgs(SType.RECT, (self.x1, self.y1), (self.x2, self.y2), self.width)
                 painter.drawRect(self.x1, self.y1, self.x2 - self.x1, self.y2 - self.y1)
+                if self.conn:
+                    self.sendCData()
 
             elif self.pData.isText() and self.text != "" and self.isMouseDown:
                 # 画文字
                 print("draw text local")
                 self.pData.updateArgs(self.text, (self.x1, self.y1))
                 painter.drawText(self.x1, self.y1,self.text)
-            if self.conn:
-                self.sendCData()
+                if self.conn:
+                    self.sendCData()
+
             self.isPaintFromMsg = False
         else:
             # 根据远程信息作画
@@ -200,7 +209,6 @@ class WhiteBoardCanvas(QLabel):
             self.isMouseDown = True
             self.isMouseUp = not self.isMouseDown
 
-#TODO 会触发不必要的update，发送不必要的信息到server
     def mouseMoveEvent(self, event):
         if self.isMouseDown and self.pData.isBrush():
             # 刷子事件需要更新鼠标平移的情况

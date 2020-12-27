@@ -3,8 +3,6 @@ from tkinter import *
 #TODO 改成mttk行不行
 
 
-from threading import Thread
-
 
 from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardApp
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
