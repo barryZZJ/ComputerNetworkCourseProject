@@ -62,10 +62,14 @@ class ConnectWindow(QMainWindow):
         layout = QVBoxLayout()
         layout2 = QHBoxLayout()
         layout3 = QHBoxLayout()
+
         layout2.addWidget(self.labelIp)
         layout2.addWidget(self.fIp)
+
+
         layout3.addWidget(self.labelPort)
         layout3.addWidget(self.fPort)
+
         layout.addLayout(layout2)
         layout.addLayout(layout3)
         layout.addWidget(self.button1)
