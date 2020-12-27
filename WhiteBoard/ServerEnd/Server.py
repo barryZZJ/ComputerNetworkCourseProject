@@ -129,6 +129,7 @@ class User(Thread):
             try:
                 cdata = self.conn.recv(BUFSIZE)  # 阻塞，收到数据后唤醒
                 #TODO 为什么会收到''?
+                print("receive", cdata)
                 if cdata != b'':
                     self.handleCtrlRequest(CRequest.decode(cdata))
             except ConnectionError:
