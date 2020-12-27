@@ -131,7 +131,7 @@ class PDataBrush(PDataBody):
         self.width = width
 
     def __str__(self):
-        l = [str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), self.width]
+        l = [str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), str(self.width)]
         return PDataBody.SEP.join(l)
 
     @staticmethod
@@ -144,7 +144,7 @@ class PDataBrush(PDataBody):
 
 class PDataShape(PDataBody):
     """形状类型的数据结构"""
-    def __init__(self, sType: SType, st: Tuple, ed: Tuple, width):
+    def __init__(self, sType: SType, st: Tuple=None, ed: Tuple=None, width=None):
         """
         :param sType: 形状类型，0-直线，1-矩形，2-圆
         :param st: 起点
@@ -157,7 +157,7 @@ class PDataShape(PDataBody):
         self.width = width
         
     def __str__(self):
-        l = [str(self.sType), str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), self.width]
+        l = [str(self.sType), str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), str(self.width)]
         return PDataBody.SEP.join(l)
 
     @staticmethod
@@ -203,7 +203,7 @@ class PDataEraser(PDataBody):
         self.width = width
     
     def __str__(self):
-        l = [str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), self.width]
+        l = [str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), str(self.width)]
         return PDataBody.SEP.join(l)
 
     @staticmethod

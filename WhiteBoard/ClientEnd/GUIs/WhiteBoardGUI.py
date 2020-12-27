@@ -1,8 +1,9 @@
 import os
+from threading import Thread
 from time import sleep
 
 from PyQt5.QtWidgets import QMainWindow, QApplication,  QLineEdit, QInputDialog, QColorDialog, QLabel, QAction, QMessageBox
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QMouseEvent, QCursor
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QMouseEvent, QCursor, QPaintEvent
 from PyQt5.QtCore import Qt
 
 
@@ -26,6 +27,9 @@ class WhiteBoardCanvas(QLabel):
     def __init__(self, parent, conn: ClientConn):
         QLabel.__init__(self, parent)
         self.conn=conn
+        if conn is None:
+            print("Offline mode!")
+
         self.whiteboard = QPixmap(797, 597)  # 考虑边框的间距 减去px
         self.whiteboard.fill(Qt.white)
         self.setStyleSheet("border: 2px solid white")
@@ -76,8 +80,8 @@ class WhiteBoardCanvas(QLabel):
         myCursor = QCursor(myPixmp)
         self.setCursor(myCursor)
         self.pData.setToEraser()
-
-    def paintEvent(self, event):
+#TODO 橡皮
+    def paintEvent(self, event: QPaintEvent):
         painter = QPainter(self.whiteboard)
         if not self.isPaintFromMsg:
             # 本地作画行为
@@ -85,11 +89,10 @@ class WhiteBoardCanvas(QLabel):
                 painter.setPen(QPen(self.backColor, self.width, Qt.SolidLine))
             else:
                 painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
-
-            print(self.x1, self.y1, self.x2, self.y2)
+            print(event.type())
             #这里需要接受服务器的图形添加在客户端
-
             if (self.pData.isBrush() or self.pData.isEraser()) and self.isMouseDown:
+                print(self.pData.isEraser())
                 # 笔刷画点、橡皮，使用同一种画法
                 if self.pData.isBrush():
                     self.pData.updateArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
@@ -122,7 +125,8 @@ class WhiteBoardCanvas(QLabel):
                 print("draw text local")
                 self.pData.updateArgs(self.text, (self.x1, self.y1))
                 painter.drawText(self.x1, self.y1,self.text)
-            self.sendCData()
+            if self.conn:
+                self.sendCData()
             self.isPaintFromMsg = False
         else:
             # 根据远程信息作画
@@ -130,9 +134,9 @@ class WhiteBoardCanvas(QLabel):
                 painter.setPen(QPen(self.backColor, self.serverMsg.body.width, Qt.SolidLine))
             elif self.serverMsg.isText():
                 # 需要width参数，但画文字用不到，就设成本地的好了
-                painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
+                painter.setPen(QPen(self.serverMsg.color, self.width, Qt.SolidLine))
             else:
-                painter.setPen(QPen(self.foreColor, self.serverMsg.body.width, Qt.SolidLine))
+                painter.setPen(QPen(self.serverMsg.color, self.serverMsg.body.width, Qt.SolidLine))
 
 
             if self.serverMsg.isBrush() or self.serverMsg.isEraser():
@@ -196,9 +200,8 @@ class WhiteBoardCanvas(QLabel):
             self.isMouseDown = True
             self.isMouseUp = not self.isMouseDown
 
-
+#TODO 会触发不必要的update，发送不必要的信息到server
     def mouseMoveEvent(self, event):
-
         if self.isMouseDown and self.pData.isBrush():
             # 刷子事件需要更新鼠标平移的情况
             sleep(0.0001)
@@ -222,7 +225,9 @@ class WhiteBoardCanvas(QLabel):
             self.update()
 
     def sendCData(self):
-        self.conn.sendall(CRequest().pData(self.pData).encode())
+        cDataBytes = CRequest().pData(self.pData).encode()
+        self.conn.sendall(cDataBytes)
+        print("send", cDataBytes)
 
     def paintFromMsg(self, pData: PData):
         self.isPaintFromMsg = True
@@ -231,7 +236,7 @@ class WhiteBoardCanvas(QLabel):
 
 class WhiteBoardWindow(QMainWindow):
     def __init__(self, conn: ClientConn):
-        QMainWindow.__init__(self)
+        super().__init__()
         self.wb = WhiteBoardCanvas(self, conn)
         self.initUi()
 
@@ -297,6 +302,7 @@ class WhiteBoardWindow(QMainWindow):
         Color = QColorDialog.getColor()  # color是Qcolor
         if Color.isValid():
             self.wb.foreColor = Color
+            self.wb.pData.color = Color
 
     def changeWidth(self):
         width, okPressed = QInputDialog.getInt(self, '选择画笔粗细', '请输入粗细：', min=1, step=1)
@@ -322,8 +328,7 @@ class WhiteBoardApp(WhiteBoardWindow):
         WhiteBoardWindow.__init__(self, conn)
         self.closed = False
 
-
-    def exit(self):
+    def exitApp(self):
         self.app.exit()
         self.closed = True
 
@@ -331,3 +336,7 @@ class WhiteBoardApp(WhiteBoardWindow):
         self.show()
         self.app.exec()
 
+
+if __name__ == '__main__':
+    w = WhiteBoardApp(None)
+    w.showBoard()

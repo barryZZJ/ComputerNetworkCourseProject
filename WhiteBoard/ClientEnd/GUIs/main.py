@@ -1,7 +1,11 @@
 from tkinter import *
+# from mttkinter.mtTkinter import *
+#TODO 改成mttk行不行
 
-from WhiteBoard.ClientEnd.ClientConn import ClientConn
+from threading import Thread
+from ClientEnd.GUIs import tmp
 from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardApp
+from WhiteBoard.ClientEnd.ClientConn import ClientConn
 
 class Main(Tk):
     _title = "Main"
@@ -12,8 +16,8 @@ class Main(Tk):
     _but_text_2 = "Stop white board"
     _but_height = '2'
 
-    def __init__(self, conn: ClientConn, id):
-        super().__init__()
+    def __init__(self, board: WhiteBoardApp, conn: ClientConn, id):
+        Tk.__init__(self)
         self.geometry(self._size)
         self.title(self._title)
 
@@ -22,22 +26,23 @@ class Main(Tk):
         print("user id is", self.id)
 
         self.isBoardOn = False # 白板是否打开
-        self.board = None
         self.allUserInfos = []
         self.allUserInfosVar = StringVar(value=self.allUserInfos)
         self.initMainUi(self)
 
-        # Thread(target=self.conn.recvCData).start()
-
-        self.focus_force()
+        self.board = board
 
     def showWindow(self):
+        self.mainloop()
+
+    def run(self):
         self.mainloop()
 
     def initMainUi(self, master):
         lf = LabelFrame(master, text=self._lf_text, font=self._font)
         lf.pack(expand=1, fill=Y, side=LEFT, anchor=W)
 
+        #TODO 禁止click
         self.lst = Listbox(lf, listvariable=self.allUserInfosVar)
         self.lst.pack(expand=1, fill=Y)
 
@@ -49,16 +54,21 @@ class Main(Tk):
         but['command'] = self.toggleWhiteBoard
 
     def toggleWhiteBoard(self):
-        #TODO 有问题，打开白板后main不能正确响应用户操作
-        if not self.isBoardOn:
-            # 结束共享后改为“打开白板”
+        #TODO 白板启动时main无法响应的问题
+        if self.isBoardOn:
+            # 关掉了白板
             self.but_text.set(self._but_text_1)
-            self.board = WhiteBoardApp(self.conn)
-            self.board.showBoard()
+            self.board.exitApp()
         else:
-            # 成功打开白板后改为“结束白板”
-            # 成功打开白板后隐藏按钮
+            # 打开白板
+            self.board.showBoard()
             self.but_text.set(self._but_text_2)
-            self.board.exit()
         self.isBoardOn = not self.isBoardOn
+#TODO 手动关掉白板，修改button行为
 
+if __name__ == '__main__':
+    main = Main(None, None, 1)
+    main.start()
+    main.destroy()
+    # Thread(target=main.mainloop).start()
+    # main.mainloop()

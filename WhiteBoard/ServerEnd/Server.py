@@ -129,9 +129,7 @@ class User(Thread):
             try:
                 cdata = self.conn.recv(BUFSIZE)  # 阻塞，收到数据后唤醒
                 self.handleCtrlRequest(CRequest.decode(cdata))
-            except ConnectionResetError:
-                pass
-            except ConnectionAbortedError:
+            except ConnectionError:
                 self.handleDisconnRequest()
 
 if __name__ == '__main__':
