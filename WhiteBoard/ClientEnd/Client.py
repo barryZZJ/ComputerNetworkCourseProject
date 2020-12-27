@@ -2,18 +2,18 @@
 import sys, os
 from threading import Thread
 
-
+from PyQt5.QtWidgets import QApplication
 
 module_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(module_path)        # 导入的绝对路径
-from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardApp
+from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardWindow
 from WhiteBoard.controlData import CResponse, CType
 
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
 from WhiteBoard.ClientEnd.GUIs.main import Main
 
 
-class Client(Thread, WhiteBoardApp):
+class Client(Thread, QApplication):
     """客户端逻辑，调用GUI模块，显示界面"""
     def __init__(self):
         Thread.__init__(self)
@@ -22,14 +22,17 @@ class Client(Thread, WhiteBoardApp):
         # 获取id
         cdata = self.conn.recvCDataBytes()
         id = CResponse.decode(cdata).transToId()
+        # 启动app主线程
+        QApplication.__init__(self, [])
         # 创建白板窗体
-        WhiteBoardApp.__init__(self, self.conn, id)
+        self.board = WhiteBoardWindow(self.conn, id)
         # 创建主窗体
-        self.main = Main(self, self.conn, id)
+        self.main = Main(self.board, self.conn, id)
 
+    def startClientWindow(self):
+        self.main.show()
+        self.exec()
 
-
-#TODO 掉线时的处理
     def run(self):
         print("running thread")
         while self.conn.isAlive:
@@ -37,6 +40,7 @@ class Client(Thread, WhiteBoardApp):
                 cdata = self.conn.recvCDataBytes()
             except OSError as e:
                 # 关闭socket连接后阻塞中的recv会触发OSError
+                print("connection to server is unavailable, closing program...")
                 break
             print("receive", cdata)
             cResp = CResponse.decode(cdata)
@@ -51,15 +55,17 @@ class Client(Thread, WhiteBoardApp):
                 self.main.setUserInfos(l)
             elif cResp.ctype == CType.PDATA:
                 pData = cResp.transToPData()
-                self.wb.paintFromMsg(pData)
+                self.board.wb.paintFromMsg(pData)
+        # 执行到这里说明连接断开了，关闭窗口
+        self.main.close()
 
 if __name__ == '__main__':
     cl = Client()
     cl.start()
 
-    cl.main.showWindow()
-    cl.conn.disconnect()
-    print("waiting thread")
+    cl.startClientWindow()
+    print("client window closed")
 
+    print("waiting thread")
     cl.join()
     print("main thread done")

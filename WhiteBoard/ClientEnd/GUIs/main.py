@@ -1,7 +1,7 @@
 #TODO 改成mttk行不行
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QHBoxLayout, QWidget, QListWidget
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QHBoxLayout, QWidget, QListWidget
 
-from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardApp
+from WhiteBoard.ClientEnd.GUIs.WhiteBoardGUI import WhiteBoardWindow
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
 
 
@@ -14,30 +14,23 @@ class Main(QMainWindow):
     _but_text_2 = "Stop white board"
     _but_height = '2'
 
-    def __init__(self, board: WhiteBoardApp, conn: ClientConn, id):
+    def __init__(self, board: WhiteBoardWindow, conn: ClientConn, id):
         super().__init__()
         self.resize(300, 350)
         self.setFixedSize(300, 350)
-        self.app = QApplication([])
         self.conn = conn
         self.id = id
         print("user id is", self.id)
-
-        self.isBoardOn = False # 白板是否打开
         self.allUserInfos = []
-        self.initMainUi(self)
 
+        self.initMainUi()
         self.board = board
 
-    def showWindow(self):
-        self.show()
-        self.app.exec()
+    def closeEvent(self, event):
+        self.board.close()
+        self.conn.disconnect()
 
-    def run(self):
-        self.show()
-        self.app.exec()
-
-    def initMainUi(self, master):
+    def initMainUi(self):
         self.setWindowTitle("第一个主窗口应用")
         self.setGeometry(200, 200, 200, 100)
         # 状态栏
@@ -75,17 +68,15 @@ class Main(QMainWindow):
 
 
     def toggleWhiteBoard(self):
-        #TODO 白板启动时main无法响应的问题
-        if self.isBoardOn:
-            # 关掉了白板
-            self.button1.setText(self._but_text_1)
-            self.board.exitApp()
-        else:
+        if self.board.isHidden():
             # 打开白板
-            self.board.showBoard()
+            self.board.show()
             self.button1.setText(self._but_text_2)
+        else:
+            # 关掉了白板
+            self.board.hide()
+            self.button1.setText(self._but_text_1)
 
-        self.isBoardOn = not self.isBoardOn
 #TODO 手动关掉白板时，修改button行为
 #TODO 关掉main时，白板也要关掉；发送disconnect之类的
 

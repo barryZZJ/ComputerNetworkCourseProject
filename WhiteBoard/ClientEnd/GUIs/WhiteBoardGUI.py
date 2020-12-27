@@ -1,6 +1,4 @@
 import os
-import time
-from threading import Thread
 from time import sleep
 
 from PyQt5.QtWidgets import QMainWindow, QApplication,  QLineEdit, QInputDialog, QColorDialog, QLabel, QAction, QMessageBox
@@ -8,7 +6,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPen, QMouseEvent, QCursor, QP
 from PyQt5.QtCore import Qt
 
 from WhiteBoard.ClientEnd.ClientConn import ClientConn
-from WhiteBoard.paintData import PData, PType, SType, PDataShape
+from WhiteBoard.paintData import PData, PType, SType
 from WhiteBoard.controlData import CRequest
 
 RESOURCES = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources")
@@ -93,7 +91,6 @@ class WhiteBoardCanvas(QLabel):
                 painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
             #这里需要接受服务器的图形添加在客户端
             if (self.pData.isBrush() or self.pData.isEraser()) and self.isMouseDown:
-                print(self.pData.isEraser())
                 # 笔刷画点、橡皮，使用同一种画法
                 if self.pData.isBrush():
                     self.pData.setArgs((self.x1, self.y1), (self.x2, self.y2), self.width)
@@ -238,8 +235,11 @@ class WhiteBoardCanvas(QLabel):
 
     def sendCData(self):
         cDataBytes = CRequest().pData(self.pData).encode()
-        self.conn.sendall(cDataBytes)
-        print("send", cDataBytes)
+        self.conn.sendCDataBytes(cDataBytes)
+        if not self.conn.isAlive:
+            return
+        print("sent", cDataBytes)
+
 
     def paintFromMsg(self, pData: PData):
         self.isPaintFromMsg = True
@@ -336,28 +336,3 @@ class WhiteBoardWindow(QMainWindow):
                 self.wb.setToText()
             else:
                 QMessageBox(self, "Error", "输入不能为空！")
-
-class WhiteBoardApp(WhiteBoardWindow):
-    def __init__(self, conn: ClientConn, id):
-        self.app = QApplication([])
-        WhiteBoardWindow.__init__(self, conn, id)
-        self.closed = False
-
-    def exitApp(self):
-        self.app.exit()
-        self.closed = True
-
-    def showBoard(self):
-        self.show()
-        self.app.exec()
-
-def f():
-    pData = PData(PType.SHAPE, QColor(2), PDataShape(SType.LINE, (276, 132), (247, 301), 4))
-    time.sleep(1)
-    w.wb.paintFromMsg(pData)
-
-
-if __name__ == '__main__':
-    w = WhiteBoardApp(None, 1)
-    # t = Thread(target=f).start()
-    w.showBoard()

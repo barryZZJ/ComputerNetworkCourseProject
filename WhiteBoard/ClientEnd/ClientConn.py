@@ -52,10 +52,23 @@ class ClientConn(socket.socket):
         return True
 
     def disconnect(self):
-        self.sendall(CRequest().disconnect().encode())
+        try:
+            self.sendall(CRequest().disconnect().encode())
+        except ConnectionError:
+            pass
         self.shutdown(socket.SHUT_RDWR)
         self.close()
         self.isAlive = False
+
+    def sendCDataBytes(self, cDataBytes: bytes):
+        try:
+            self.sendall(cDataBytes)
+        except ConnectionError:
+            print("connection to server is unavailable, closing program...")
+            self.shutdown(socket.SHUT_RDWR)
+            self.close()
+            self.isAlive = False
+
 
     def recvCDataBytes(self):
         return self.recv(BUFSIZE)
