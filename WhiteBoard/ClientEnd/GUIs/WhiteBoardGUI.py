@@ -19,7 +19,8 @@ PATHTOPEN = os.path.join(RESOURCES, "pen.png")
 PATHTOERASER = os.path.join(RESOURCES, "eraser.png")
 PATHTOCOLOR = os.path.join(RESOURCES, "color.png")
 PATHTOWIDTH = os.path.join(RESOURCES, "changewidth.png")
-
+PATHTOERASE = os.path.join(RESOURCES, "erase.png")
+PATHTOREPAINT = os.path.join(RESOURCES, "repaint.png")
 
 class WhiteBoardCanvas(QLabel):
 
@@ -39,6 +40,7 @@ class WhiteBoardCanvas(QLabel):
         self.width = 4  # pen width
         self.eraserWidth = 10
         self.pData = PData(PType.NA, self.foreColor, self.backColor)
+        self.typeBeforeCls = PType.NA
         self.serverMsg: PData
         self.isMouseDown = False
         self.isMouseUp = True
@@ -49,6 +51,7 @@ class WhiteBoardCanvas(QLabel):
         self.pData.setForeColor(color)
 
 # 切换绘制类型
+
     def setToDot(self):
         print('set to brush')
         self.setCursor(Qt.CrossCursor)
@@ -77,12 +80,17 @@ class WhiteBoardCanvas(QLabel):
     def setToEraser(self):
         # 自定义鼠标形状（png）
         print("set to eraser")
-        myPixmp = QPixmap(PATHTOERASER).scaled(30,30)
-        myCursor = QCursor(myPixmp)
+        myPixmp = QPixmap(PATHTOERASE).scaled(10,10)
+        myCursor = QCursor(myPixmp, 3, 3)
         self.setCursor(myCursor)
         self.pData.setToEraser()
 
-#TODO 加一个清屏
+    def setToCls(self):
+        print("set to cls")
+        self.typeBeforeCls = self.pData.pType
+        self.pData.setToCls()
+        self.doPaint()
+        self.update()
 
     def paintEvent(self, event: QPaintEvent):
         QPainter(self).drawPixmap(2, 2, self.whiteboard)
@@ -93,6 +101,7 @@ class WhiteBoardCanvas(QLabel):
         if not self.isPaintFromMsg:
             # 本地作画行为
             #这里需要接受服务器的图形添加在客户端
+
             if self.pData.isBrush() and self.isMouseDown:
                 painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
                 self.pData.set((self.x1, self.y1), (self.x2, self.y2), self.width)
@@ -143,10 +152,12 @@ class WhiteBoardCanvas(QLabel):
                 painter.drawText(self.x1, self.y1,self.text)
                 if self.conn:
                     self.sendCReq()
-            #TODO 清屏相关
-            # elif 清屏:
-            #     if self.conn:
-            #         self.sendCReq(PData(PType.CLS, self.foreColor, self.backColor))
+            elif self.pData.isCls():
+                print("do cls local")
+                painter.eraseRect(0,0,1000,1000)
+                if self.conn:
+                    self.sendCReq(PData(PType.CLS, self.foreColor, self.backColor))
+                self.pData.pType = self.typeBeforeCls
 
             self.isPaintFromMsg = False
         else:
@@ -209,10 +220,10 @@ class WhiteBoardCanvas(QLabel):
                     x1 = self.serverMsg.body.pos[0]
                     y1 = self.serverMsg.body.pos[1]
                     painter.drawText(x1, y1, self.serverMsg.body.content)
-                # TODO 清屏相关
                 elif self.serverMsg.isCls():
                     # 清屏
-                    pass
+                    print("do cls remote")
+                    painter.eraseRect(0, 0, 1000, 1000)
 
                 self.isPaintFromMsg = False
             except Exception as e:
@@ -305,72 +316,117 @@ class WhiteBoardWindow(QMainWindow):
         # 设置画板
         self.wb.setGeometry(10, 50, 750, 501)
         # 橡皮
-        eraser = QAction(QIcon(PATHTOERASER), "Eraser", self)
-        eraser.setToolTip("Eraser")
+        self.eraser = QAction(QIcon(PATHTOERASER), "Eraser", self)
+        self.eraser.setToolTip("Eraser")
 
-        color = QAction(QIcon(PATHTOCOLOR), "color", self)
-        color.setToolTip("color")
+        self.repaint = QAction(QIcon(PATHTOREPAINT), "repaint", self)
+        self.repaint.setToolTip("repaint")
 
-        pen = QAction(QIcon(PATHTOPEN), "pen", self)
-        pen.setToolTip("pen")
+        self.color = QAction(QIcon(PATHTOCOLOR), "color", self)
+        self.color.setToolTip("color")
 
-        Line = QAction(QIcon(PATHTOLINE), "Line", self)
-        Line.setToolTip("Line")
+        self.pen = QAction(QIcon(PATHTOPEN), "pen", self)
+        self.pen.setToolTip("pen")
 
-        Circle = QAction(QIcon(PATHTOCIRCLE), "Circle", self)
-        Circle.setToolTip("Circle")
+        self.Line = QAction(QIcon(PATHTOLINE), "Line", self)
+        self.Line.setToolTip("Line")
 
-        Rec = QAction(QIcon(PATHTOREC), "Rec", self)
-        Rec.setToolTip("Rec")
+        self.Circle = QAction(QIcon(PATHTOCIRCLE), "Circle", self)
+        self.Circle.setToolTip("Circle")
 
-        Text = QAction(QIcon(PATHTOTEXT), "Text", self)
-        Text.setToolTip("Text")
+        self.Rec = QAction(QIcon(PATHTOREC), "Rec", self)
+        self.Rec.setToolTip("Rec")
 
-        changeWidth = QAction(QIcon(PATHTOWIDTH), "Width", self)
-        changeWidth.setToolTip("Width")
+        self.Text = QAction(QIcon(PATHTOTEXT), "Text", self)
+        self.Text.setToolTip("Text")
 
+        self.changeWidth = QAction(QIcon(PATHTOWIDTH), "Width", self)
+        self.changeWidth.setToolTip("Width")
 
         #工具栏
         self.menubar = self.addToolBar("ToolBar")
         self.menubar.setMovable(False)
-        self.menubar.addAction(eraser)
-        self.menubar.addAction(color)
-        self.menubar.addAction(pen)
-        self.menubar.addAction(Line)
-        self.menubar.addAction(Circle)
-        self.menubar.addAction(Rec)
-        self.menubar.addAction(Text)
-        self.menubar.addAction(changeWidth)
+        self.menubar.addAction(self.eraser)
+        self.menubar.addAction(self.color)
+        self.menubar.addAction(self.pen)
+        self.menubar.addAction(self.Line)
+        self.menubar.addAction(self.Circle)
+        self.menubar.addAction(self.Rec)
+        self.menubar.addAction(self.Text)
+        self.menubar.addAction(self.changeWidth)
+        self.menubar.addAction(self.repaint)
         # 主页面
         self.setWindowTitle(f"Drawing Board {ip} - {id}")
 
-        eraser.triggered.connect(self.wb.setToEraser)
-        color.triggered.connect(self.chooseColor)
-        pen.triggered.connect(self.wb.setToDot)
-        Line.triggered.connect(self.wb.setToLine)
-        Circle.triggered.connect(self.wb.setToCircle)
-        Rec.triggered.connect(self.wb.setToRec)
-        Text.triggered.connect(self.trySetToText)
-        changeWidth.triggered.connect(self.changeWidth)
+        self.eraser.triggered.connect(self.setToEraser)
+        self.color.triggered.connect(self.chooseColor)
+        self.pen.triggered.connect(self.setToDot)
+        self.Line.triggered.connect(self.setToLine)
+        self.Circle.triggered.connect(self.setToCircle)
+        self.Rec.triggered.connect(self.setToRec)
+        self.Text.triggered.connect(self.trySetToText)
+        self.changeWidth.triggered.connect(self.changewidth)
+        self.repaint.triggered.connect(self.wb.setToCls)
 
         #默认点一下笔刷
-        pen.trigger()
-#TODO 处于选中状态的图标
+        self.pen.trigger()
+
+    def resetEnabled(self):
+        self.eraser.setEnabled(True)
+        self.color.setEnabled(True)
+        self.pen.setEnabled(True)
+        self.Line.setEnabled(True)
+        self.Circle.setEnabled(True)
+        self.Rec.setEnabled(True)
+        self.Text.setEnabled(True)
+        self.changeWidth.setEnabled(True)
+
+
+    def setToEraser(self):
+        self.resetEnabled()
+        self.eraser.setEnabled(False)
+        self.wb.setToEraser()
+
+    def setToDot(self):
+        self.resetEnabled()
+        self.pen.setEnabled(False)
+        self.wb.setToDot()
+
+    def setToLine(self):
+        self.resetEnabled()
+        self.Line.setEnabled(False)
+        self.wb.setToLine()
+
+    def setToCircle(self):
+        self.resetEnabled()
+        self.Circle.setEnabled(True)
+        self.wb.setToCircle()
+
+    def setToRec(self):
+        self.resetEnabled()
+        self.Rec.setEnabled(False)
+        self.wb.setToRec()
+
     def chooseColor(self):
         Color = QColorDialog.getColor()  # color是Qcolor
         if Color.isValid():
             self.wb.setForeColor(Color)
 
-    def changeWidth(self):
+    def changewidth(self):
         width, okPressed = QInputDialog.getInt(self, '选择画笔粗细', '请输入粗细：', value=self.wb.width, min=1, step=1)
+
         if okPressed:
             self.wb.width = width
 
     def trySetToText(self):
+        self.resetEnabled()
+        self.Text.setEnabled(False)
         text, okPressed = QInputDialog.getText(self, "Get text", "要共享的文字:")
         if okPressed and text != '':
             self.wb.text = text
             self.wb.setToText()
+
+
 
 if __name__ == '__main__':
     app = QApplication([])
