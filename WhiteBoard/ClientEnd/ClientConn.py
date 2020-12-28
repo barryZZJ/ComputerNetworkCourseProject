@@ -45,6 +45,7 @@ class ClientConn(socket.socket):
         cDataBytes = cReq.encode()
         try:
             self.sendall(cDataBytes)
+            print("sent", cReq.print())
         except ConnectionError:
             print("send error")
             print("connection to server is unavailable, closing program...")
@@ -59,6 +60,6 @@ class ClientConn(socket.socket):
         cResp = CResponse.decodeHeader(data)
         data = self.recv(cResp.bodyLen)
         cResp.decodeBody(data)
-        print("receive", cResp)
+        print("receive raw", cResp)
         return cResp
 

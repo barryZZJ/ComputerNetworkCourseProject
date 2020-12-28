@@ -1,5 +1,6 @@
 import sys, os
-from typing import Dict
+from typing import Dict, List
+
 module_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(module_path)        # 导入绝对路径
 import socket
@@ -7,15 +8,13 @@ from threading import Thread, Lock
 from WhiteBoard.ClientEnd.GUIs.connect import validIp, validPort
 from WhiteBoard.controlData import CRequest, CResponse, CType
 
-#TODO log forward to new user
-
 # 全局变量
 BUFSIZE = 1024
 # 存客户端线程实例
 users = {} # type: Dict[str, User]
 userInfos = {}
 # 存服务器的数据，用于图像的复现
-Logs = {}
+logs = [] # type: List[CResponse]
 
 class Server(socket.socket):
     """连接客户端的类，封装socket"""
@@ -43,7 +42,7 @@ class Server(socket.socket):
             conn, addr = self.accept() # 阻塞，每收到一个连接就唤醒
             # 新建一个处理该连接的ClientObj线程
             user = User(conn, self.nextUserId, addr)
-            print('connected by', addr, '-', user.id)
+            print('\nconnected by', addr, '-', user.id)
             # 记入字典
             users[user.id] = user
             userInfos[user.id] = user.ip
@@ -51,9 +50,11 @@ class Server(socket.socket):
             user.start()
             # 每当新用户连接时，发送id给该用户
             user.assignId()
-            # 每当新用户连接时或有用户断开时，发送userinfos给所有用户
+            # 有新用户连接时，发送userinfos给所有用户
             for id, user in users.items():
                 user.sendUserInfos()
+            # 有新用户连接时，发送历史图像给该用户
+            user.sendLogs()
 
     @classmethod
     def mutexIncUserId(cls):
@@ -80,27 +81,38 @@ class User(Thread):
 
     def assignId(self):
         cResp = CResponse.id(self.id)
-        print("respond to", self.ip, '-', self.id)
+        print("\nrespond to", self.ip, '-', self.id, ":")
+        print(cResp.print())
         self.sendCResp(cResp)
         Server.mutexIncUserId()
 
-    def forwardContent(self, bodyStr):
+    def sendLogs(self):
+        print("\nsend logs to user", self.id, ":")
+        for cResp in logs:
+            self.sendCResp(cResp)
+
+    def forwardContent(self, bodyBytes: bytes):
         # 把内容封装到response里，转发给除了自己之外的所有用户
-        cResp = CResponse.pData(bodyStr)
+        cResp = CResponse.pData(bodyBytes)
+        # 记入log
+        logs.append(cResp)
+        print()
         for id, user in users.items():
             if id != self.id:
                 print("forward pdata to user ", id)
                 user.sendCResp(cResp)
+        print(cResp.print())
 
     def sendUserInfos(self):
         cResp = CResponse.userInfos(userInfos)
-        print("send userinfo to", self.ip, '-', self.id)
+        print("\nsend to", self.ip, '-', self.id, ":")
+        print(cResp.print())
         self.sendCResp(cResp)
 
     def sendCResp(self, cResp: CResponse):
         cRespBytes = cResp.encode()
         try:
-            print("send", cRespBytes)
+            print("send raw", cRespBytes)
             self.conn.sendall(cRespBytes)
         except ConnectionError:
             print("connection error, closing")
@@ -111,16 +123,13 @@ class User(Thread):
         # TODO 为什么会收到''?
         data = self.conn.recv(CRequest.HEADER_LEN)
         if data != b'':
-            print("receive header", data)
             cReq = CRequest.decodeHeader(data)
             data = self.conn.recv(cReq.bodyLen)
-            print("receive body", data)
             cReq.decodeBody(data)
             return cReq
         return CRequest(CType.NOOP)
 
     def handleCtrlRequest(self, cReq: CRequest):
-        print("type:", cReq.ctype.name)
         if cReq.ctype == CType.PDATA:
             self.forwardContent(cReq.body)
         elif cReq.ctype == CType.DISCONNECT:
@@ -134,7 +143,7 @@ class User(Thread):
         print("connection from", self.ip, '-', self.id, "is closed")
         Server.mutexDecUserId()
         self.alive = False
-        # 每当新用户连接时或有用户断开时，发送userinfos给所有用户
+        # 有用户断开时，发送userinfos给所有用户
         for id, user in users.items():
             user.sendUserInfos()
 
@@ -143,6 +152,7 @@ class User(Thread):
             try:
                 print("receive from", self.ip, '-', self.id)
                 cReq = self.recvCReq()  # 阻塞，收到数据后唤醒
+                print("receive", cReq.print())
                 self.handleCtrlRequest(cReq)
             except ConnectionError:
                 print("connection error, closing")

@@ -93,8 +93,6 @@ class WhiteBoardCanvas(QLabel):
         if not self.isPaintFromMsg:
             # 本地作画行为
             #这里需要接受服务器的图形添加在客户端
-            print("in do paint")
-
             if self.pData.isBrush() and self.isMouseDown:
                 painter.setPen(QPen(self.foreColor, self.width, Qt.SolidLine))
                 self.pData.set((self.x1, self.y1), (self.x2, self.y2), self.width)
@@ -266,7 +264,6 @@ class WhiteBoardCanvas(QLabel):
         self.conn.sendCReq(cReq)
         if not self.conn.isAlive:
             return
-        print("sent", cReq)
 
 
     def paintFromMsg(self, pData: PData):

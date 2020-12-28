@@ -15,6 +15,9 @@ class PType(Enum):
     NA = 5
     def __str__(self):
         return str(self.value)
+    def print(self):
+        # 输出debug信息用
+        return f"PType.{self.name}"
 
 class SType(Enum):
     """形状类型，0-直线，1-矩形，2-圆，3-不适用（不是画形状）"""
@@ -24,6 +27,11 @@ class SType(Enum):
     NA = 3
     def __str__(self):
         return str(self.value)
+
+    def print(self):
+        # 输出debug信息用
+        return f"SType.{self.name}"
+
 
 TPDataBody = TypeVar('TPDataBody', bound='PDataBody')
 TPData = TypeVar('TPData', bound='PData')
@@ -44,6 +52,13 @@ class PData:
 
         # Body
         self.body = body
+
+    def print(self):
+        # 输出debug信息用
+        if self.body:
+            return f'{self.pType.print()}, {self.body.print()}'
+        else:
+            return f'{self.pType.print()}'
 
     def __str__(self):
         # 转为字符串
@@ -148,6 +163,10 @@ class PDataBrush(PDataBody):
         l = [str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), str(self.width)]
         return PDataBody.SEP.join(l)
 
+    def print(self):
+        # 输出debug信息用
+        return f"Brush {self.st} {self.ed}-{self.width}"
+
     @staticmethod
     def decodeFromStr(body: str) -> TPDataBody:
         l = body.split(PDataBody.SEP)
@@ -176,6 +195,10 @@ class PDataShape(PDataBody):
         l = [str(self.sType), str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), str(self.width)]
         return PDataBody.SEP.join(l)
 
+    def print(self):
+        # 输出debug信息用
+        return f"{self.sType.print()} {self.st} {self.ed}-{self.width}"
+
     @staticmethod
     def decodeFromStr(body: str) -> TPDataBody:
         l = body.split(PDataBody.SEP)
@@ -198,7 +221,11 @@ class PDataText(PDataBody):
     def __str__(self):
         l = [self.content, str(self.pos[0]), str(self.pos[1])]
         return PDataText.SEP.join(l)
-    
+
+    def print(self):
+        # 输出debug信息用
+        return f"Text {self.pos}-{self.content}"
+
     @staticmethod
     def decodeFromStr(body: str) -> TPDataBody:
         l = body.split(PDataBody.SEP)
@@ -221,6 +248,10 @@ class PDataEraser(PDataBody):
     def __str__(self):
         l = [str(self.st[0]), str(self.st[1]), str(self.ed[0]), str(self.ed[1]), str(self.width)]
         return PDataBody.SEP.join(l)
+
+    def print(self):
+        # 输出debug信息用
+        return f"Eraser {self.st} {self.ed}-{self.width}"
 
     @staticmethod
     def decodeFromStr(body: str) -> TPDataBody:

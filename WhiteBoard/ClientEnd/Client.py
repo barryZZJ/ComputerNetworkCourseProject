@@ -61,7 +61,7 @@ class Client(Thread, QApplication):
                 print("recv error")
                 print("connection to server is unavailable, closing program...")
                 break
-            print("receive", cResp)
+            print("receive", cResp.print())
             if cResp.ctype == CType.USERINFOS:
                 # 收到用户信息
                 userinfodict = cResp.body

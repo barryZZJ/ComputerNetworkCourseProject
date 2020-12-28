@@ -21,6 +21,10 @@ class CType(Enum):
     def __bytes__(self):
         return str(self.value).encode(ENCODING)
 
+    def print(self):
+        # 输出debug信息用
+        return f"CType.{self.name}"
+
 
 class CRequest:
     HEADER_LEN = 4
@@ -30,6 +34,17 @@ class CRequest:
         self.bodyLen = bodyLen # 3 byte
         # body
         self.body = body
+    
+    def print(self):
+        # 输出debug信息用
+        if self.ctype == CType.PDATA:
+            if type(self.body) == bytes:
+                body = PData.decodeFromStr(self.body.decode(ENCODING))
+            else:
+                body = self.body.print()
+        else:
+            body = ''
+        return f"{self.ctype.print()} {body}"
 
     @staticmethod
     def mkRequest(ctype, body=None):
@@ -76,6 +91,20 @@ class CResponse:
         # body
         self.body = body
 
+    def print(self):
+        # 输出debug信息用
+
+        if self.ctype == CType.PDATA:
+            if type(self.body) == str:
+                body = PData.decodeFromStr(self.body).print()
+            elif type(self.body) == PData:
+                body = self.body.print()
+        elif self.ctype == CType.ID:
+            body = self.body
+        elif self.ctype == CType.USERINFOS:
+            body = self.body
+        return f"{self.ctype.print()} {body}"
+
     @staticmethod
     def mkResponse(ctype: CType, body: str):
         if body:
@@ -95,8 +124,8 @@ class CResponse:
         return CResponse.mkResponse(CType.USERINFOS, json.dumps(usersdict))
 
     @staticmethod
-    def pData(pData:PData):
-        return CResponse.mkResponse(CType.PDATA, str(pData))
+    def pData(pDataBytes: bytes):
+        return CResponse.mkResponse(CType.PDATA, pDataBytes.decode(ENCODING))
 
     def __str__(self):
         l = [str(self.ctype), str(self.bodyLen), str(self.body)]
