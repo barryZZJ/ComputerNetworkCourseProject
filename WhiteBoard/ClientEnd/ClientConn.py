@@ -8,7 +8,7 @@ class ClientConn(socket.socket):
     _poll_all_users_interval = 500
 
     def __init__(self):
-        socket.socket.__init__(self) # create ip socket
+        socket.socket.__init__(self) # create tcp/ip socket
         self.isAlive = False
         self.serverIp = None
         self.serverPort = None
