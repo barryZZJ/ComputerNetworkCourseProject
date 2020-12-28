@@ -162,4 +162,8 @@ class User(Thread):
                 self.handleDisconnRequest()
 
 if __name__ == '__main__':
-    Server()
+    ip = input("server ip:[127.0.0.1]\n")
+    ip = ip if ip else '127.0.0.1'
+    port = input("server port:[5000]\n")
+    port = eval(port) if port else 5000
+    Server(ip, port)
