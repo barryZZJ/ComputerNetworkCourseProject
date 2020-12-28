@@ -63,7 +63,7 @@ class PData:
     def __str__(self):
         # 转为字符串
         body = str(self.body) if self.body else ''
-        l = [str(self.pType), str(self.foreColor.value()), str(self.backColor.value()), body]
+        l = [str(self.pType), str(self.foreColor.name()), str(self.backColor.name()), body]
         return PData.SEP.join(l)
 
     @staticmethod
@@ -74,8 +74,8 @@ class PData:
     def decodeFromStr(pdata: str)-> TPData:
         l = pdata.split(PData.SEP)
         pType = PType(int(l[0]))
-        foreColor = QColor(int(l[1]))
-        backColor = QColor(int(l[2]))
+        foreColor = QColor(l[1])
+        backColor = QColor(l[2])
         body = None
         if pType == PType.BRUSH:
             body = PDataBrush.decodeFromStr(l[3])
