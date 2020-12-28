@@ -67,6 +67,10 @@ class PData:
         return PData.SEP.join(l)
 
     @staticmethod
+    def decodeFromBytes(pdataBytes: bytes)->TPData:
+        return PData.decodeFromStr(pdataBytes.decode(ENCODING))
+
+    @staticmethod
     def decodeFromStr(pdata: str)-> TPData:
         l = pdata.split(PData.SEP)
         pType = PType(int(l[0]))
@@ -114,6 +118,9 @@ class PData:
 
     def isEraser(self):
         return self.pType == PType.ERASER
+
+    def setToCls(self):
+        self.pType = PType.CLS
 
     def isCls(self):
         return self.pType == PType.CLS
