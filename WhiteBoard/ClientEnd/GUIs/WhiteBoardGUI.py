@@ -393,54 +393,56 @@ class WhiteBoardWindow(QMainWindow):
 
         #默认点一下笔刷
         self.pen.trigger()
+
 #TODO 处于选中状态的图标
     def setIcon(self):
-        self.eraser = QAction(QIcon(PATHTOERASER), "Eraser", self)
-        self.color = QAction(QIcon(PATHTOCOLOR), "color", self)
-        self.pen = QAction(QIcon(PATHTOPEN), "pen", self)
-        self.Line = QAction(QIcon(PATHTOLINE), "Line", self)
-        self.Circle = QAction(QIcon(PATHTOCIRCLE), "Circle", self)
-        self.Rec = QAction(QIcon(PATHTOREC), "Rec", self)
-        self.Text = QAction(QIcon(PATHTOTEXT), "Text", self)
-        self.changeWidth = QAction(QIcon(PATHTOWIDTH), "Width", self)
+        self.eraser.setChecked(False)
+        self.color.setChecked(False)
+        self.pen.setChecked(False)
+        self.Line.setChecked(False)
+        self.Circle.setChecked(False)
+        self.Rec.setChecked(False)
+        self.Text.setChecked(False)
+        self.changeWidth.setChecked(False)
 
 
     def setToEraser(self):
         print(" ==== ")
         self.setIcon()
-        self.eraser.setIcon(QIcon(PATHTOERASER2))
+        #self.eraser.setIcon(QIcon(PATHTOERASER2))
+        self.eraser.setChecked(True)
         self.wb.setToEraser()
 
     def setToDot(self):
         self.setIcon()
-        self.pen = QAction(QIcon(PATHTOPEN2), "pen", self)
+        self.pen.setChecked(True)
         self.wb.setToDot()
 
     def setToLine(self):
         self.setIcon()
-        self.Line = QAction(QIcon(PATHTOLINE2), "Line", self)
+        self.Line.setChecked(True)
         self.wb.setToLine()
 
     def setToCircle(self):
         self.setIcon()
-        self.Circle = QAction(QIcon(PATHTOCIRCLE2), "Circle", self)
+        self.Circle.setChecked(True)
         self.wb.setToCircle()
 
     def setToRec(self):
         self.setIcon()
-        self.Rec = QAction(QIcon(PATHTOREC2), "Rec", self)
+        self.Rec.setChecked(True)
         self.wb.setToRec()
 
     def chooseColor(self):
         self.setIcon()
-        self.color = QAction(QIcon(PATHTOCOLOR2), "color", self)
+        self.color.setChecked(True)
         Color = QColorDialog.getColor()  # color是Qcolor
         if Color.isValid():
             self.wb.setForeColor(Color)
 
     def changewidth(self):
         self.setIcon()
-        self.changeWidth = QAction(QIcon(PATHTOWIDTH2), "Width", self)
+        self.changeWidth.setChecked(True)
         width, okPressed = QInputDialog.getInt(self, '选择画笔粗细', '请输入粗细：', min=1, step=1)
 
         if okPressed:
@@ -448,7 +450,7 @@ class WhiteBoardWindow(QMainWindow):
 
     def trySetToText(self):
         self.setIcon()
-        self.Text = QAction(QIcon(PATHTOTEXT2), "Text", self)
+        self.Text.setChecked(True)
         text, okPressed = QInputDialog.getText(self, "Get text", "要共享的文字:")
         if okPressed and text != '':
             self.wb.text = text
