@@ -1,12 +1,11 @@
 import sys, os
 from typing import Dict, List
-
-from paintData import PData
-
 module_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(module_path)        # 导入绝对路径
+
 import socket
 from threading import Thread, Lock
+from WhiteBoard.paintData import PData
 from WhiteBoard.ClientEnd.GUIs.connect import validIp, validPort
 from WhiteBoard.controlData import CRequest, CResponse, CType
 
