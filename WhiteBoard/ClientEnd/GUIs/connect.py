@@ -66,8 +66,8 @@ class ConnectWindow(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
             # 回车
-            print("触发按钮事件")
-            # self.butConnHandler()
+            # print("触发按钮事件")
+            self.butConnHandler()
 
     def butConnHandler(self):
         """button逻辑，判断输入是否合法"""
