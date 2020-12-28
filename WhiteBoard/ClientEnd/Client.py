@@ -58,6 +58,7 @@ class Client(Thread, QApplication):
                 cResp = self.conn.recvCResp()
             except OSError as e:
                 # 关闭socket连接后阻塞中的recv会触发OSError
+                print("recv error")
                 print("connection to server is unavailable, closing program...")
                 break
             print("receive", cResp)
@@ -78,7 +79,7 @@ class Client(Thread, QApplication):
                 self.board.wb.paintFromMsg(pData)
 
         # 执行到这里说明连接断开了，关闭窗口
-        self.main.close()
+        self.main.forceClose()
 
 if __name__ == '__main__':
     cl = Client()

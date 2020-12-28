@@ -6,11 +6,13 @@ from PyQt5.QtGui import QColor
 ENCODING = 'utf8'
 
 class PType(Enum):
-    """绘制类型，0-刷子，1-形状，2-文字，3-橡皮"""
+    """绘制类型，0-刷子，1-形状，2-文字，3-橡皮, 4-清屏, 5-不可用"""
     BRUSH = 0
     SHAPE = 1
     TEXT = 2
     ERASER = 3
+    CLS = 4
+    NA = 5
     def __str__(self):
         return str(self.value)
 
@@ -31,7 +33,7 @@ class PData:
     SEP = '_'
     def __init__(self, pType: PType, foreColor: QColor, backColor: QColor, body:Type[TPDataBody]=None):
         """
-        :param pType: 绘制类型，0-刷子，1-形状，2-文字，3-橡皮
+        :param pType: 绘制类型，0-刷子，1-形状，2-文字，3-橡皮, 4-清屏
         :param foreColor: 前景色
         :param backColor: 背景色
         """
@@ -45,7 +47,8 @@ class PData:
 
     def __str__(self):
         # 转为字符串
-        l = [str(self.pType), str(self.foreColor.value()), str(self.backColor.value()), str(self.body)]
+        body = str(self.body) if self.body else ''
+        l = [str(self.pType), str(self.foreColor.value()), str(self.backColor.value()), body]
         return PData.SEP.join(l)
 
     @staticmethod
@@ -74,7 +77,7 @@ class PData:
 
     def setToShape(self, sType: SType):
         self.pType = PType.SHAPE
-        self.setArgs(sType)
+        self.set(sType)
 
     def isLine(self):
         return self.pType == PType.SHAPE and self.body.sType == SType.LINE
@@ -97,10 +100,13 @@ class PData:
     def isEraser(self):
         return self.pType == PType.ERASER
 
+    def isCls(self):
+        return self.pType == PType.CLS
+
     def setForeColor(self, color: QColor):
         self.foreColor = color
 
-    def setArgs(self, *args):
+    def set(self, *args):
         '''
         if PType.BRUSH:
             args: st, ed, width
