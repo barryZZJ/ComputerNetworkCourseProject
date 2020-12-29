@@ -4,7 +4,6 @@ from WhiteBoard.controlData import CRequest, CResponse
 
 class ClientConn(socket.socket):
     """连接服务器的类，封装socket"""
-    # Hint: 可以看一下help(socket)
     _poll_all_users_interval = 500
 
     def __init__(self):
@@ -42,6 +41,7 @@ class ClientConn(socket.socket):
         self.isAlive = False
 
     def sendCReq(self, cReq: CRequest):
+        # 一次发送一个CReq
         cDataBytes = cReq.encode()
         try:
             self.sendall(cDataBytes)
