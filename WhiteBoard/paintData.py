@@ -6,7 +6,7 @@ from PyQt5.QtGui import QColor
 ENCODING = 'utf8'
 
 class PType(Enum):
-    """绘制类型，0-刷子，1-形状，2-文字，3-橡皮, 4-清屏, 5-不可用"""
+    """绘制类型，0-笔刷，1-形状，2-文字，3-橡皮, 4-清屏, 5-不可用"""
     BRUSH = 0
     SHAPE = 1
     TEXT = 2
@@ -32,7 +32,7 @@ class SType(Enum):
         # 输出debug信息用
         return f"SType.{self.name}"
 
-
+# 用于参数类型指示
 TPDataBody = TypeVar('TPDataBody', bound='PDataBody')
 TPData = TypeVar('TPData', bound='PData')
 
@@ -42,8 +42,8 @@ class PData:
     def __init__(self, pType: PType, foreColor: QColor, backColor: QColor, body:Type[TPDataBody]=None):
         """
         :param pType: 绘制类型，0-刷子，1-形状，2-文字，3-橡皮, 4-清屏
-        :param foreColor: 前景色
-        :param backColor: 背景色
+        :param foreColor: 前景色，编码后为十六进制颜色信息，如'#000000'
+        :param backColor: 背景色，编码后为十六进制颜色信息，如'#000000'
         """
         # Header
         self.pType = pType

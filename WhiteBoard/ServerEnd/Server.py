@@ -9,11 +9,9 @@ from WhiteBoard.paintData import PData
 from WhiteBoard.ClientEnd.GUIs.connect import validIp, validPort
 from WhiteBoard.controlData import CRequest, CResponse, CType
 
-# 全局变量
-BUFSIZE = 1024
 # 存客户端线程实例
-users = {} # type: Dict[str, User]
-userInfos = {}
+users = {} # type: Dict[str, User] # Dict[id, User]
+userInfos = {} # Dict[id, ip]
 # 存服务器的数据，用于图像的复现
 logs = [] # type: List[CResponse]
 
@@ -52,8 +50,8 @@ class Server(socket.socket):
             # 每当新用户连接时，发送id给该用户
             user.assignId()
             # 有新用户连接时，发送userinfos给所有用户
-            for id, user in users.items():
-                user.sendUserInfos()
+            for id, usera in users.items():
+                usera.sendUserInfos()
             # 有新用户连接时，发送历史图像给该用户
             user.sendLogs()
 
@@ -123,7 +121,6 @@ class User(Thread):
 
     def recvCReq(self) -> CRequest:
         # 一次接收一个CReq
-        # TODO 为什么会收到''?
         data = self.conn.recv(CRequest.HEADER_LEN)
         if data != b'':
             cReq = CRequest.decodeHeader(data)

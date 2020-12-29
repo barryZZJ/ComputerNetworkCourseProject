@@ -8,11 +8,11 @@ ENCODING = 'utf8'
 CSEP = ''
 
 class CType(Enum):
-    ID = auto() # 用户的ID
-    USERINFOS = auto() # 所有用户
-    PDATA = auto() # 画图数据
-    DISCONNECT = auto() # 断开连接
-    NOOP = auto()
+    ID = 0 # 用户的ID
+    USERINFOS = 1 # 在线用户信息
+    PDATA = 2 # 画图数据
+    DISCONNECT = 3 # 断开连接
+    NOOP = 4 # 不可用
 
     def __str__(self):
         """The value of the Enum member."""
@@ -103,6 +103,9 @@ class CResponse:
             body = self.body
         elif self.ctype == CType.USERINFOS:
             body = self.body
+        else:
+            body = ''
+
         return f"{self.ctype.print()} {body}"
 
     @staticmethod
